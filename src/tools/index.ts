@@ -1,8 +1,4 @@
-import { lazy, type ComponentType } from "react";
-
-// Lazy import each category's file once and pick named exports.
-const cal = lazy(() => import("./calculators").then((m) => ({ default: m as any })));
-// Instead of lazy category modules (which don't work with named), we use a static map.
+import type { ComponentType } from "react";
 
 import * as C from "./calculators";
 import * as T from "./text";
