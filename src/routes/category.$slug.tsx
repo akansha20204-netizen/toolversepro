@@ -47,7 +47,7 @@ function CategoryPage() {
         </div>
       </header>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {tools.map((t) => <ToolCard key={t.slug} tool={t} />)}
+        {tools.map((t: (typeof tools)[number]) => <ToolCard key={t.slug} tool={t} />)}
       </div>
     </div>
   );

@@ -45,7 +45,7 @@ function PostPage() {
   const { post } = Route.useLoaderData();
   const related = BLOG_POSTS.filter((p) => p.slug !== post.slug).slice(0, 3);
   // Extract h2s for TOC
-  const tocMatches = Array.from(post.content.matchAll(/<h2>([^<]+)<\/h2>/g)).map((m) => m[1]);
+  const tocMatches = Array.from(post.content.matchAll(/<h2>([^<]+)<\/h2>/g)).map((m: RegExpMatchArray) => m[1]);
   return (
     <article className="mx-auto max-w-4xl px-4 py-10">
       <nav className="mb-4 flex items-center gap-1 text-xs text-muted-foreground">
@@ -91,7 +91,7 @@ function PostPage() {
           </section>
 
           <div className="mt-8 flex flex-wrap gap-2">
-            {post.tags.map((t) => <span key={t} className="rounded-full bg-muted px-3 py-1 text-xs">#{t}</span>)}
+            {post.tags.map((t: string) => <span key={t} className="rounded-full bg-muted px-3 py-1 text-xs">#{t}</span>)}
           </div>
         </div>
 
