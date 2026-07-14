@@ -55,6 +55,7 @@ export function Footer() {
               <li><Link to="/contact" className="hover:text-foreground">Contact</Link></li>
               <li><Link to="/write-for-us" className="hover:text-foreground">Write For Us</Link></li>
               <li><Link to="/sitemap" className="hover:text-foreground">Sitemap</Link></li>
+              <li><Link to="/export-blogger" className="hover:text-foreground">Export to Blogger</Link></li>
             </ul>
           </div>
 
