@@ -46,6 +46,7 @@ export const toolRegistry: Record<string, ComponentType> = {
   "js-beautifier": D.JSBeautifier,
   "password-generator": D.PasswordGenerator,
   "uuid-generator": D.UUIDGenerator,
+  "json-to-csv": D.jsontocsvconverter,
   // Converters
   "length-converter": U.LengthConverter,
   "weight-converter": U.WeightConverter,
@@ -57,6 +58,7 @@ export const toolRegistry: Record<string, ComponentType> = {
   "data-converter": U.DataConverter,
   "pressure-converter": U.PressureConverter,
   "energy-converter": U.EnergyConverter,
+  "json-to-csv": D.jsontocsvconverter,
   // Images
   "image-compressor": I.ImageCompressor,
   "image-resizer": I.ImageResizer,
