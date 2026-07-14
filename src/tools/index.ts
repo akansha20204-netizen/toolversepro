@@ -46,7 +46,7 @@ export const toolRegistry: Record<string, ComponentType> = {
   "js-beautifier": D.JSBeautifier,
   "password-generator": D.PasswordGenerator,
   "uuid-generator": D.UUIDGenerator,
-  "json-to-csv": D.jsontocsvconverter,
+  "json-to-csv-converter": D.JsonToCsvConverter,
   // Converters
   "length-converter": U.LengthConverter,
   "weight-converter": U.WeightConverter,
