@@ -12,8 +12,8 @@ export const Route = createFileRoute("/")({
     meta: [
       { title: "ToolHub Pro — 70+ Free Browser Tools for Everyone" },
       { name: "description", content: "70+ free online tools that run entirely in your browser. Calculators, image editors, PDF utilities, developer helpers and unit converters. No signup, no upload, 100% private." },
-      { property: "og:title", content: "ToolHub Pro — 70+ Free Browser Tools" },
-      { property: "og:description", content: "Fast, private and beautifully designed online tools." },
+      { property: "og:title", content: "ToolHub Pro — 70+ Free Browser Tools for Everyone" },
+      { property: "og:description", content: "70+ free online tools that run entirely in your browser. Calculators, image editors, PDF utilities, developer helpers and unit converters. No signup, no upload, 100% private." },
       { property: "og:url", content: "/" },
     ],
     links: [{ rel: "canonical", href: "/" }],
