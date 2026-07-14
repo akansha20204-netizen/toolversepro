@@ -2,13 +2,19 @@ import { TOOLS, CATEGORIES } from "@/data/tools";
 import { BLOG_POSTS } from "@/data/blog";
 import { generateToolContent } from "@/data/tool-content";
 
-const BLOG_ID = "8480221735395593333";
+// Blogger's importer requires an Atom feed that closely matches its own
+// backup format. Common failure causes we defend against here:
+//   • post IDs must be unique 19-digit numerics
+//   • no <link rel='alternate'> with a placeholder domain (Blogger validates it)
+//   • no <thr:total> on entries at import time
+//   • content must be valid HTML wrapped as escaped text in type='html'
+//   • only ASCII / valid XML characters (strip control chars)
+
 const AUTHOR_NAME = "ToolHub Team";
 const AUTHOR_EMAIL = "noreply@blogger.com";
-const AUTHOR_URI = "https://www.blogger.com/profile/00000000000000000000";
 
 function xmlEscape(s: string): string {
-  return s
+  return stripControl(s)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -16,49 +22,55 @@ function xmlEscape(s: string): string {
     .replace(/'/g, "&apos;");
 }
 
-function isoDate(date?: string): string {
-  const d = date ? new Date(date) : new Date();
-  return d.toISOString().replace(/\.\d{3}Z$/, "-08:00");
+function stripControl(s: string): string {
+  // XML 1.0 forbids most C0 control chars except \t \n \r
+  return s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
 }
 
+function isoDate(date?: string): string {
+  const d = date ? new Date(date) : new Date();
+  return d.toISOString().replace(/\.\d{3}Z$/, "+00:00");
+}
+
+// Deterministic-ish 19-digit numeric ID, unique per entry.
+function makePostId(seed: number): string {
+  const base = (Date.now() * 1000 + seed).toString();
+  // Pad to 19 digits so it looks like a real Blogger post id.
+  return (base + "0000000000000000000").slice(0, 19);
+}
+
+// Blog id is arbitrary for import — Blogger reassigns on ingest.
+const BLOG_ID = "1" + "0".repeat(18);
+
 interface Entry {
-  id: string;
-  kind: "post" | "page";
   title: string;
   content: string;
   labels: string[];
   published: string;
   updated: string;
-  slug: string;
 }
 
 function entryXml(e: Entry, idx: number): string {
-  const postId = `${Date.now()}${String(idx).padStart(4, "0")}`;
+  const postId = makePostId(idx + 1);
   const labels = e.labels
+    .filter((l, i, a) => l && a.indexOf(l) === i)
     .map(
       (l) =>
         `    <category scheme='http://www.blogger.com/atom/ns#' term='${xmlEscape(l)}'/>`,
     )
     .join("\n");
-  const kindTerm =
-    e.kind === "post"
-      ? "http://schemas.google.com/blogger/2008/kind#post"
-      : "http://schemas.google.com/blogger/2008/kind#page";
   return `  <entry>
     <id>tag:blogger.com,1999:blog-${BLOG_ID}.post-${postId}</id>
     <published>${e.published}</published>
     <updated>${e.updated}</updated>
-    <category scheme='http://schemas.google.com/g/2005#kind' term='${kindTerm}'/>
+    <category scheme='http://schemas.google.com/g/2005#kind' term='http://schemas.google.com/blogger/2008/kind#post'/>
 ${labels}
     <title type='text'>${xmlEscape(e.title)}</title>
     <content type='html'>${xmlEscape(e.content)}</content>
-    <link rel='alternate' type='text/html' href='https://toolhub-pro.blogspot.com/${e.kind === "post" ? "2026/01" : "p"}/${e.slug}.html' title='${xmlEscape(e.title)}'/>
     <author>
-      <name>${AUTHOR_NAME}</name>
+      <name>${xmlEscape(AUTHOR_NAME)}</name>
       <email>${AUTHOR_EMAIL}</email>
-      <uri>${AUTHOR_URI}</uri>
     </author>
-    <thr:total xmlns:thr='http://purl.org/syndication/thread/1.0'>0</thr:total>
   </entry>`;
 }
 
@@ -80,50 +92,36 @@ export function buildBloggerXml(): string {
 
   BLOG_POSTS.forEach((p) => {
     entries.push({
-      id: p.slug,
-      kind: "post",
       title: p.title,
       content: p.content.trim(),
       labels: [p.category, ...p.tags],
       published: isoDate(p.date),
       updated: isoDate(p.date),
-      slug: p.slug,
     });
   });
 
   TOOLS.forEach((t) => {
     entries.push({
-      id: t.slug,
-      kind: "post",
       title: t.name,
       content: toolHtml(t.slug),
       labels: [CATEGORIES[t.category].name, "Tools", ...t.keywords],
       published: now,
       updated: now,
-      slug: t.slug,
     });
   });
 
   const feed = `<?xml version='1.0' encoding='UTF-8'?>
-<?xml-stylesheet href='http://www.blogger.com/styles/atom.css' type='text/css'?>
-<feed xmlns='http://www.w3.org/2005/Atom' xmlns:openSearch='http://a9.com/-/spec/opensearchrss/1.0/' xmlns:blogger='http://schemas.google.com/blogger/2008' xmlns:georss='http://www.georss.org/georss' xmlns:gd='http://schemas.google.com/g/2005' xmlns:thr='http://purl.org/syndication/thread/1.0'>
+<feed xmlns='http://www.w3.org/2005/Atom' xmlns:openSearch='http://a9.com/-/spec/opensearchrss/1.0/' xmlns:blogger='http://schemas.google.com/blogger/2008' xmlns:gd='http://schemas.google.com/g/2005'>
   <id>tag:blogger.com,1999:blog-${BLOG_ID}</id>
   <updated>${now}</updated>
-  <category scheme='http://www.blogger.com/atom/ns#' term='Tools'/>
   <title type='text'>ToolHub Pro</title>
-  <subtitle type='html'>70+ free browser-based tools for creators, students and developers.</subtitle>
-  <link rel='http://schemas.google.com/g/2005#feed' type='application/atom+xml' href='https://toolhub-pro.blogspot.com/feeds/posts/default'/>
-  <link rel='self' type='application/atom+xml' href='https://www.blogger.com/feeds/${BLOG_ID}/posts/default'/>
-  <link rel='alternate' type='text/html' href='https://toolhub-pro.blogspot.com/'/>
   <author>
-    <name>${AUTHOR_NAME}</name>
+    <name>${xmlEscape(AUTHOR_NAME)}</name>
     <email>${AUTHOR_EMAIL}</email>
-    <uri>${AUTHOR_URI}</uri>
   </author>
   <generator version='7.00' uri='http://www.blogger.com'>Blogger</generator>
   <openSearch:totalResults>${entries.length}</openSearch:totalResults>
   <openSearch:startIndex>1</openSearch:startIndex>
-  <openSearch:itemsPerPage>${entries.length}</openSearch:itemsPerPage>
 ${entries.map((e, i) => entryXml(e, i)).join("\n")}
 </feed>`;
   return feed;
