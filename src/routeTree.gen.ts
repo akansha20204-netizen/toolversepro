@@ -15,6 +15,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SitemapRouteImport } from './routes/sitemap'
 import { Route as RefundRouteImport } from './routes/refund'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as ExportBloggerRouteImport } from './routes/export-blogger'
 import { Route as DmcaRouteImport } from './routes/dmca'
 import { Route as DisclaimerRouteImport } from './routes/disclaimer'
 import { Route as CookiesRouteImport } from './routes/cookies'
@@ -56,6 +57,11 @@ const RefundRoute = RefundRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExportBloggerRoute = ExportBloggerRouteImport.update({
+  id: '/export-blogger',
+  path: '/export-blogger',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DmcaRoute = DmcaRouteImport.update({
@@ -129,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/cookies': typeof CookiesRoute
   '/disclaimer': typeof DisclaimerRoute
   '/dmca': typeof DmcaRoute
+  '/export-blogger': typeof ExportBloggerRoute
   '/privacy': typeof PrivacyRoute
   '/refund': typeof RefundRoute
   '/sitemap': typeof SitemapRoute
@@ -149,6 +156,7 @@ export interface FileRoutesByTo {
   '/cookies': typeof CookiesRoute
   '/disclaimer': typeof DisclaimerRoute
   '/dmca': typeof DmcaRoute
+  '/export-blogger': typeof ExportBloggerRoute
   '/privacy': typeof PrivacyRoute
   '/refund': typeof RefundRoute
   '/sitemap': typeof SitemapRoute
@@ -170,6 +178,7 @@ export interface FileRoutesById {
   '/cookies': typeof CookiesRoute
   '/disclaimer': typeof DisclaimerRoute
   '/dmca': typeof DmcaRoute
+  '/export-blogger': typeof ExportBloggerRoute
   '/privacy': typeof PrivacyRoute
   '/refund': typeof RefundRoute
   '/sitemap': typeof SitemapRoute
@@ -192,6 +201,7 @@ export interface FileRouteTypes {
     | '/cookies'
     | '/disclaimer'
     | '/dmca'
+    | '/export-blogger'
     | '/privacy'
     | '/refund'
     | '/sitemap'
@@ -212,6 +222,7 @@ export interface FileRouteTypes {
     | '/cookies'
     | '/disclaimer'
     | '/dmca'
+    | '/export-blogger'
     | '/privacy'
     | '/refund'
     | '/sitemap'
@@ -232,6 +243,7 @@ export interface FileRouteTypes {
     | '/cookies'
     | '/disclaimer'
     | '/dmca'
+    | '/export-blogger'
     | '/privacy'
     | '/refund'
     | '/sitemap'
@@ -253,6 +265,7 @@ export interface RootRouteChildren {
   CookiesRoute: typeof CookiesRoute
   DisclaimerRoute: typeof DisclaimerRoute
   DmcaRoute: typeof DmcaRoute
+  ExportBloggerRoute: typeof ExportBloggerRoute
   PrivacyRoute: typeof PrivacyRoute
   RefundRoute: typeof RefundRoute
   SitemapRoute: typeof SitemapRoute
@@ -305,6 +318,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/export-blogger': {
+      id: '/export-blogger'
+      path: '/export-blogger'
+      fullPath: '/export-blogger'
+      preLoaderRoute: typeof ExportBloggerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dmca': {
@@ -414,6 +434,7 @@ const rootRouteChildren: RootRouteChildren = {
   CookiesRoute: CookiesRoute,
   DisclaimerRoute: DisclaimerRoute,
   DmcaRoute: DmcaRoute,
+  ExportBloggerRoute: ExportBloggerRoute,
   PrivacyRoute: PrivacyRoute,
   RefundRoute: RefundRoute,
   SitemapRoute: SitemapRoute,
@@ -426,13 +447,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
