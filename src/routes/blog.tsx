@@ -43,7 +43,9 @@ function BlogList() {
         <div className="grid gap-6 sm:grid-cols-2">
           {filtered.map((p) => (
             <Link key={p.slug} to="/blog/$slug" params={{ slug: p.slug }} className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card card-hover">
-              <div className="aspect-video gradient-hero" />
+              <div className="aspect-video overflow-hidden bg-muted">
+                <img src={p.image} alt={p.title} loading="lazy" width={1280} height={720} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
+              </div>
               <div className="flex flex-1 flex-col p-5">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <span className="rounded-full bg-primary/10 px-2 py-0.5 font-medium text-primary">{p.category}</span>
