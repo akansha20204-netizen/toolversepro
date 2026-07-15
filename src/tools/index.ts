@@ -58,7 +58,6 @@ export const toolRegistry: Record<string, ComponentType> = {
   "data-converter": U.DataConverter,
   "pressure-converter": U.PressureConverter,
   "energy-converter": U.EnergyConverter,
-  "json-to-csv-converter": D.JsonToCsvConverter,
   // Images
   "image-compressor": I.ImageCompressor,
   "image-resizer": I.ImageResizer,
