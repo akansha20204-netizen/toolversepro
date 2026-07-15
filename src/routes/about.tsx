@@ -31,8 +31,8 @@ export const Route = createFileRoute("/about")({
         ))}
       </div>
       <p>We started ToolHub Pro because we were tired of tools that made simple tasks complicated. Every feature ships only when we would use it ourselves, and every UI is refined until it feels effortless.</p>
-      <p>If you have a suggestion or want to collaborate, reach out via our Contact page — we ship user requests every week.
-        For Any other Query Please Mail us @ ashu28511@gmail.com
+      <p>If you have a suggestion or want to collaborate, reach out via our Contact page — we will try to update and add new tools every month.
+        For any other query please mail us @ ashu28511@gmail.com
       </p>
     </StaticPage>
   ),

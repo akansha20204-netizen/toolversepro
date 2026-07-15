@@ -72,7 +72,7 @@ function Home() {
     { q: "Is my data safe?", a: "Absolutely. All tools run entirely in your browser using client-side JavaScript. Your files and text never leave your device." },
     { q: "Do the tools work offline?", a: "Most tools work offline once the page has loaded, thanks to modern web APIs." },
     { q: "Can I use ToolHub Pro on mobile?", a: "Yes. Every tool is fully responsive and works smoothly on phones, tablets and desktops." },
-    { q: "How often are new tools added?", a: "We ship new tools and improvements every week based on user requests." },
+    { q: "How often are new tools added?", a: "We will try to update and add new tools every month based on user requests." },
   ];
 
   return (
@@ -118,7 +118,7 @@ function Home() {
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3 text-xs text-muted-foreground">
             <span className="flex items-center gap-1"><Zap className="h-3.5 w-3.5 text-primary" /> Instant results</span>
             <span className="flex items-center gap-1"><Shield className="h-3.5 w-3.5 text-primary" /> 100% private</span>
-            <span className="flex items-center gap-1"><Heart className="h-3.5 w-3.5 text-primary" /> Loved by 100k+ users</span>
+            <span className="flex items-center gap-1"><Heart className="h-3.5 w-3.5 text-primary" /> Loved by 10k+ users</span>
           </div>
         </div>
       </section>
