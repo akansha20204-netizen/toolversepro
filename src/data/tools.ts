@@ -131,7 +131,7 @@ export const TOOLS: ToolMeta[] = [
   { slug: "js-beautifier", name: "JavaScript Beautifier", category: "developer", description: "Beautify minified JavaScript code.", icon: "FileJson", keywords: ["js"] },
   { slug: "password-generator", name: "Password Generator", category: "developer", description: "Generate strong, random passwords.", icon: "KeyRound", keywords: ["password"], popular: true },
   { slug: "uuid-generator", name: "UUID Generator", category: "developer", description: "Generate v4 UUIDs in bulk.", icon: "Fingerprint", keywords: ["uuid"] },
-  { slug: "json-to-csv-converter", name: "Json to csv", category: "developer", description: "Converts json to csv format.", icon: "json", keywords: ["jsontocsv"] },
+  { slug: "json-to-csv-converter", name: "JSON to CSV Converter", category: "developer", description: "Convert JSON files or pasted JSON to downloadable CSV with nested key flattening.", icon: "FileSpreadsheet", keywords: ["json", "csv", "convert", "export"], latest: true },
 
   // Unit Converters (10)
   { slug: "length-converter", name: "Length Converter", category: "converter", description: "Meters, feet, inches, miles and more.", icon: "Ruler", keywords: ["length"], popular: true },

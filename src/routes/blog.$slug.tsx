@@ -19,6 +19,8 @@ export const Route = createFileRoute("/blog/$slug")({
         { property: "og:description", content: p.excerpt },
         { property: "og:type", content: "article" },
         { property: "og:url", content: `/blog/${params.slug}` },
+        { property: "og:image", content: p.image },
+        { name: "twitter:image", content: p.image },
         { property: "article:published_time", content: p.date },
         { property: "article:author", content: p.author },
       ],
@@ -72,7 +74,9 @@ function PostPage() {
         </div>
       </header>
 
-      <div className="mb-8 aspect-video overflow-hidden rounded-3xl gradient-hero" />
+      <div className="mb-8 aspect-video overflow-hidden rounded-3xl bg-muted">
+        <img src={post.image} alt={post.title} width={1280} height={720} className="h-full w-full object-cover" />
+      </div>
 
       <div className="grid gap-8 lg:grid-cols-[1fr_240px]">
         <div>

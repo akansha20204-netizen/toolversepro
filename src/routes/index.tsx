@@ -72,7 +72,7 @@ function Home() {
     { q: "Is my data safe?", a: "Absolutely. All tools run entirely in your browser using client-side JavaScript. Your files and text never leave your device." },
     { q: "Do the tools work offline?", a: "Most tools work offline once the page has loaded, thanks to modern web APIs." },
     { q: "Can I use ToolHub Pro on mobile?", a: "Yes. Every tool is fully responsive and works smoothly on phones, tablets and desktops." },
-    { q: "How often are new tools added?", a: "We ship new tools and improvements every week based on user requests." },
+    { q: "How often are new tools added?", a: "We will try to update and add new tools every month based on user requests." },
   ];
 
   return (
@@ -118,7 +118,7 @@ function Home() {
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3 text-xs text-muted-foreground">
             <span className="flex items-center gap-1"><Zap className="h-3.5 w-3.5 text-primary" /> Instant results</span>
             <span className="flex items-center gap-1"><Shield className="h-3.5 w-3.5 text-primary" /> 100% private</span>
-            <span className="flex items-center gap-1"><Heart className="h-3.5 w-3.5 text-primary" /> Loved by 100k+ users</span>
+            <span className="flex items-center gap-1"><Heart className="h-3.5 w-3.5 text-primary" /> Loved by 10k+ users</span>
           </div>
         </div>
       </section>
@@ -189,7 +189,9 @@ function Home() {
         <div className="grid gap-4 md:grid-cols-3">
           {BLOG_POSTS.slice(0, 3).map((p) => (
             <Link key={p.slug} to="/blog/$slug" params={{ slug: p.slug }} className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card card-hover">
-              <div className="aspect-video gradient-hero" />
+              <div className="aspect-video overflow-hidden bg-muted">
+                <img src={p.image} alt={p.title} loading="lazy" width={1280} height={720} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
+              </div>
               <div className="flex flex-1 flex-col p-5">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <span className="rounded-full bg-primary/10 px-2 py-0.5 text-primary font-medium">{p.category}</span>

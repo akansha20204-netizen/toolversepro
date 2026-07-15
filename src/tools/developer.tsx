@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Copy, RotateCcw, RefreshCw } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
+import { Copy, RotateCcw, RefreshCw, Upload, Download, FileJson } from "lucide-react";
 import { toast } from "sonner";
 import { Field, ResultBox, TButton, TInput, TSelect, TTextarea, copyText } from "@/components/site/tool-ui";
 
@@ -165,6 +165,186 @@ export function UUIDGenerator() {
         <TButton variant="outline" onClick={() => cp(out)}><Copy className="h-4 w-4" />Copy all</TButton>
       </div>
       <TTextarea rows={12} value={out} readOnly />
+    </div>
+  );
+}
+
+// -------- JSON to CSV Converter --------
+const MAX_JSON_BYTES = 15 * 1024 * 1024;
+
+function flattenObject(obj: any, prefix = "", out: Record<string, any> = {}) {
+  if (obj === null || obj === undefined) {
+    out[prefix || "value"] = obj === null ? "" : "";
+    return out;
+  }
+  if (typeof obj !== "object") {
+    out[prefix || "value"] = obj;
+    return out;
+  }
+  if (Array.isArray(obj)) {
+    if (obj.length === 0) {
+      out[prefix || "value"] = "";
+    } else if (obj.every((v) => v === null || typeof v !== "object")) {
+      out[prefix || "value"] = obj.join("; ");
+    } else {
+      obj.forEach((v, i) => flattenObject(v, prefix ? `${prefix}.${i}` : String(i), out));
+    }
+    return out;
+  }
+  const keys = Object.keys(obj);
+  if (keys.length === 0) {
+    out[prefix || "value"] = "";
+    return out;
+  }
+  for (const k of keys) {
+    const nk = prefix ? `${prefix}.${k}` : k;
+    flattenObject(obj[k], nk, out);
+  }
+  return out;
+}
+
+function jsonToRows(data: any): Record<string, any>[] {
+  if (Array.isArray(data)) {
+    if (data.length === 0) return [];
+    return data.map((row) => flattenObject(row));
+  }
+  if (data && typeof data === "object") return [flattenObject(data)];
+  return [{ value: data }];
+}
+
+function escapeCsvCell(v: any): string {
+  if (v === null || v === undefined) return "";
+  const s = typeof v === "object" ? JSON.stringify(v) : String(v);
+  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
+function rowsToCsv(rows: Record<string, any>[]): { csv: string; headers: string[] } {
+  const headerSet: string[] = [];
+  const seen = new Set<string>();
+  for (const r of rows) for (const k of Object.keys(r)) if (!seen.has(k)) { seen.add(k); headerSet.push(k); }
+  const lines = [headerSet.map(escapeCsvCell).join(",")];
+  for (const r of rows) lines.push(headerSet.map((h) => escapeCsvCell(r[h])).join(","));
+  return { csv: lines.join("\n"), headers: headerSet };
+}
+
+export function JsonToCsvConverter() {
+  const [text, setText] = useState("");
+  const [err, setErr] = useState("");
+  const [csv, setCsv] = useState("");
+  const [rows, setRows] = useState<Record<string, any>[]>([]);
+  const [headers, setHeaders] = useState<string[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const convert = (raw: string) => {
+    setErr(""); setCsv(""); setRows([]); setHeaders([]);
+    const s = raw.trim();
+    if (!s) { setErr("Input is empty. Paste JSON or upload a file."); return; }
+    let data: any;
+    try { data = JSON.parse(s); } catch (e: any) { setErr(`Invalid JSON: ${e.message}`); return; }
+    const r = jsonToRows(data);
+    if (r.length === 0) { setErr("JSON parsed but contains no data to convert."); return; }
+    const { csv: out, headers: h } = rowsToCsv(r);
+    setCsv(out); setRows(r); setHeaders(h);
+    toast.success(`Converted ${r.length} row${r.length === 1 ? "" : "s"}`);
+  };
+
+  const onFile = (f: File | null | undefined) => {
+    if (!f) return;
+    if (f.size === 0) { setErr("File is empty."); return; }
+    if (f.size > MAX_JSON_BYTES) { setErr(`File too large: ${(f.size / 1024 / 1024).toFixed(2)} MB (max 15 MB).`); return; }
+    const reader = new FileReader();
+    reader.onerror = () => setErr("Failed to read file.");
+    reader.onload = () => { const t = String(reader.result || ""); setText(t); convert(t); };
+    reader.readAsText(f);
+  };
+
+  const download = () => {
+    if (!csv) return;
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "converted.csv"; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 500);
+  };
+
+  const reset = () => { setText(""); setCsv(""); setRows([]); setHeaders([]); setErr(""); };
+
+  const previewRows = rows.slice(0, 50);
+
+  return (
+    <div className="grid gap-5">
+      <div
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => { e.preventDefault(); onFile(e.dataTransfer.files?.[0]); }}
+        className="flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-border bg-muted/30 p-6 text-center"
+      >
+        <FileJson className="h-8 w-8 text-primary" />
+        <div className="text-sm">
+          <span className="font-medium">Drag & drop a JSON file</span>
+          <span className="text-muted-foreground"> or click to browse (max 15 MB)</span>
+        </div>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="application/json,.json,text/plain"
+          className="hidden"
+          onChange={(e) => onFile(e.target.files?.[0])}
+        />
+        <TButton variant="outline" onClick={() => inputRef.current?.click()}>
+          <Upload className="h-4 w-4" /> Choose file
+        </TButton>
+      </div>
+
+      <Field label="Or paste JSON here">
+        <TTextarea
+          rows={10}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder='[{"user":{"name":"Ada","age":36},"role":"admin"},{"user":{"name":"Linus","age":54},"role":"user"}]'
+        />
+      </Field>
+
+      <div className="flex flex-wrap gap-2">
+        <TButton onClick={() => convert(text)}>Convert to CSV</TButton>
+        <TButton variant="outline" onClick={reset}><RotateCcw className="h-4 w-4" /> Reset</TButton>
+        <TButton variant="outline" disabled={!csv} onClick={() => cp(csv)}><Copy className="h-4 w-4" /> Copy CSV</TButton>
+        <TButton disabled={!csv} onClick={download}><Download className="h-4 w-4" /> Download CSV</TButton>
+      </div>
+
+      {err && (
+        <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">{err}</div>
+      )}
+
+      {rows.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-baseline justify-between">
+            <h3 className="text-sm font-semibold">Preview <span className="text-muted-foreground font-normal">({rows.length} row{rows.length === 1 ? "" : "s"}, {headers.length} column{headers.length === 1 ? "" : "s"}{rows.length > previewRows.length ? `, showing first ${previewRows.length}` : ""})</span></h3>
+          </div>
+          <div className="overflow-x-auto rounded-xl border border-border bg-background">
+            <table className="min-w-full text-xs">
+              <thead className="bg-muted/60">
+                <tr>
+                  {headers.map((h) => (
+                    <th key={h} className="whitespace-nowrap px-3 py-2 text-left font-semibold text-foreground">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {previewRows.map((r, i) => (
+                  <tr key={i} className="border-t border-border">
+                    {headers.map((h) => (
+                      <td key={h} className="whitespace-nowrap px-3 py-2 text-muted-foreground max-w-[240px] truncate">
+                        {r[h] === undefined || r[h] === null || r[h] === "" ? <span className="opacity-40">—</span> : String(r[h])}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
