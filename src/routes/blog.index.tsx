@@ -3,7 +3,7 @@ import { BLOG_POSTS } from "@/data/blog";
 import { useState } from "react";
 import * as Icons from "lucide-react";
 
-export const Route = createFileRoute("/blog")({
+export const Route = createFileRoute("/blog/")({
   head: () => ({
     meta: [
       { title: "Blog — Tips, Tutorials & Guides | ToolHub Pro" },

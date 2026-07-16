@@ -348,3 +348,228 @@ export function JsonToCsvConverter() {
     </div>
   );
 }
+
+// -------- Video Downloader (MP4 direct + HLS .m3u8) --------
+type DlStatus = "idle" | "fetching" | "downloading" | "concatenating" | "done" | "error";
+
+function resolveUrl(base: string, ref: string): string {
+  try { return new URL(ref, base).toString(); } catch { return ref; }
+}
+
+function parseM3U8(text: string, baseUrl: string): { segments: string[]; variants: { url: string; bandwidth: number }[] } {
+  const lines = text.split(/\r?\n/);
+  const segments: string[] = [];
+  const variants: { url: string; bandwidth: number }[] = [];
+  let pendingBw = 0;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    if (line.startsWith("#EXT-X-STREAM-INF")) {
+      const m = /BANDWIDTH=(\d+)/i.exec(line);
+      pendingBw = m ? +m[1] : 0;
+      continue;
+    }
+    if (line.startsWith("#")) continue;
+    if (pendingBw > 0) {
+      variants.push({ url: resolveUrl(baseUrl, line), bandwidth: pendingBw });
+      pendingBw = 0;
+    } else {
+      segments.push(resolveUrl(baseUrl, line));
+    }
+  }
+  return { segments, variants };
+}
+
+export function VideoDownloader() {
+  const [url, setUrl] = useState("");
+  const [status, setStatus] = useState<DlStatus>("idle");
+  const [msg, setMsg] = useState("");
+  const [err, setErr] = useState("");
+  const [progress, setProgress] = useState({ done: 0, total: 0 });
+  const abortRef = useRef<AbortController | null>(null);
+
+  const reset = () => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setStatus("idle"); setMsg(""); setErr(""); setProgress({ done: 0, total: 0 });
+  };
+
+  const triggerDownload = (blob: Blob, filename: string) => {
+    const href = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = href; a.download = filename; a.click();
+    setTimeout(() => URL.revokeObjectURL(href), 1000);
+  };
+
+  const fileNameFromUrl = (u: string, ext: string) => {
+    try {
+      const path = new URL(u).pathname;
+      const base = path.split("/").pop() || `video.${ext}`;
+      const clean = base.replace(/\.(m3u8|mp4|mov|mkv|webm|ts)(\?.*)?$/i, "");
+      return `${clean || "video"}.${ext}`;
+    } catch { return `video.${ext}`; }
+  };
+
+  const start = async () => {
+    setErr(""); setMsg(""); setProgress({ done: 0, total: 0 });
+    const trimmed = url.trim();
+    if (!trimmed) { setErr("Paste a direct .mp4 or .m3u8 URL first."); return; }
+    let parsed: URL;
+    try { parsed = new URL(trimmed); } catch { setErr("That does not look like a valid URL."); return; }
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") { setErr("Only http:// and https:// URLs are supported."); return; }
+
+    const ctl = new AbortController();
+    abortRef.current = ctl;
+    const isM3U8 = /\.m3u8(\?|$)/i.test(parsed.pathname + parsed.search);
+
+    try {
+      if (!isM3U8) {
+        // Direct file (mp4/mov/webm/...)
+        setStatus("downloading");
+        setMsg("Downloading video…");
+        const res = await fetch(trimmed, { signal: ctl.signal, mode: "cors" });
+        if (!res.ok) throw new Error(`Server returned HTTP ${res.status}`);
+        const total = +(res.headers.get("content-length") || 0);
+        const reader = res.body?.getReader();
+        if (!reader) {
+          const blob = await res.blob();
+          triggerDownload(blob, fileNameFromUrl(trimmed, "mp4"));
+        } else {
+          const chunks: Uint8Array[] = [];
+          let received = 0;
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            if (value) { chunks.push(value); received += value.length; setProgress({ done: received, total }); }
+          }
+          const blob = new Blob(chunks as BlobPart[], { type: res.headers.get("content-type") || "video/mp4" });
+          triggerDownload(blob, fileNameFromUrl(trimmed, "mp4"));
+        }
+        setStatus("done");
+        setMsg("Download complete.");
+        return;
+      }
+
+      // HLS .m3u8 flow
+      setStatus("fetching");
+      setMsg("Fetching playlist…");
+      const playlistRes = await fetch(trimmed, { signal: ctl.signal, mode: "cors" });
+      if (!playlistRes.ok) throw new Error(`Playlist fetch failed: HTTP ${playlistRes.status}`);
+      const playlistText = await playlistRes.text();
+
+      let baseUrl = trimmed;
+      let { segments, variants } = parseM3U8(playlistText, baseUrl);
+
+      if (segments.length === 0 && variants.length > 0) {
+        // Master playlist — pick the highest bandwidth variant
+        variants.sort((a, b) => b.bandwidth - a.bandwidth);
+        const chosen = variants[0].url;
+        setMsg("Master playlist detected. Loading highest-quality variant…");
+        const varRes = await fetch(chosen, { signal: ctl.signal, mode: "cors" });
+        if (!varRes.ok) throw new Error(`Variant playlist fetch failed: HTTP ${varRes.status}`);
+        const varText = await varRes.text();
+        baseUrl = chosen;
+        segments = parseM3U8(varText, baseUrl).segments;
+      }
+
+      if (/#EXT-X-KEY/i.test(playlistText) && /METHOD=(?!NONE)/i.test(playlistText)) {
+        throw new Error("This stream is encrypted (DRM). Encrypted HLS is not supported.");
+      }
+      if (segments.length === 0) throw new Error("No playable segments found in the playlist.");
+
+      setStatus("downloading");
+      setProgress({ done: 0, total: segments.length });
+      const parts: Uint8Array[] = new Array(segments.length);
+
+      // Parallel downloads with limited concurrency
+      const CONCURRENCY = 6;
+      let idx = 0; let completed = 0;
+      const workers = Array.from({ length: Math.min(CONCURRENCY, segments.length) }, async () => {
+        while (true) {
+          const i = idx++;
+          if (i >= segments.length) return;
+          const segRes = await fetch(segments[i], { signal: ctl.signal, mode: "cors" });
+          if (!segRes.ok) throw new Error(`Segment ${i + 1} failed: HTTP ${segRes.status}`);
+          parts[i] = new Uint8Array(await segRes.arrayBuffer());
+          completed++;
+          setProgress({ done: completed, total: segments.length });
+          setMsg(`Downloading segment ${completed} of ${segments.length}…`);
+        }
+      });
+      await Promise.all(workers);
+
+      setStatus("concatenating");
+      setMsg("Joining segments…");
+      const totalBytes = parts.reduce((s, p) => s + p.length, 0);
+      const merged = new Uint8Array(totalBytes);
+      let off = 0;
+      for (const p of parts) { merged.set(p, off); off += p.length; }
+      const blob = new Blob([merged as BlobPart], { type: "video/mp2t" });
+      triggerDownload(blob, fileNameFromUrl(trimmed, "ts"));
+      setStatus("done");
+      setMsg(`Downloaded ${segments.length} segments (${(totalBytes / 1024 / 1024).toFixed(1)} MB). Saved as .ts — playable in VLC / MPV.`);
+    } catch (e: any) {
+      if (e?.name === "AbortError") { setMsg("Cancelled."); setStatus("idle"); return; }
+      setStatus("error");
+      const raw = e?.message || String(e);
+      const isNetwork = /Failed to fetch|NetworkError|CORS|Load failed/i.test(raw);
+      setErr(isNetwork
+        ? "The browser blocked the download — most likely a CORS restriction on the video host. Browser-based downloads only work when the server sends Access-Control-Allow-Origin."
+        : raw);
+    } finally {
+      abortRef.current = null;
+    }
+  };
+
+  const pct = progress.total > 0 ? Math.min(100, Math.round((progress.done / progress.total) * 100)) : 0;
+  const busy = status === "fetching" || status === "downloading" || status === "concatenating";
+
+  return (
+    <div className="grid gap-5">
+      <Field label="Direct video URL (.mp4 or .m3u8)">
+        <TInput
+          type="url"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          placeholder="https://example.com/video.mp4  or  https://example.com/stream.m3u8"
+          spellCheck={false}
+          autoComplete="off"
+        />
+      </Field>
+
+      <div className="flex flex-wrap gap-2">
+        <TButton onClick={start} disabled={busy}>
+          <Download className="h-4 w-4" /> {busy ? "Working…" : "Download"}
+        </TButton>
+        {busy && (
+          <TButton variant="outline" onClick={() => abortRef.current?.abort()}>
+            Cancel
+          </TButton>
+        )}
+        <TButton variant="outline" onClick={reset}><RotateCcw className="h-4 w-4" /> Reset</TButton>
+      </div>
+
+      {(busy || status === "done") && (
+        <div className="space-y-2">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+            <div className="h-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {msg} {progress.total > 0 && `(${progress.done}/${progress.total}${status === "downloading" && !url.match(/\.m3u8/i) && progress.total ? " bytes" : ""})`}
+          </div>
+        </div>
+      )}
+
+      {err && (
+        <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">{err}</div>
+      )}
+
+      <div className="rounded-xl border border-border bg-muted/30 p-4 text-xs text-muted-foreground space-y-1">
+        <p><strong className="text-foreground">What works:</strong> direct MP4/WebM/MOV file URLs and unencrypted HLS .m3u8 playlists that allow cross-origin requests (CORS).</p>
+        <p><strong className="text-foreground">What does not work:</strong> DRM-protected streams (Widevine / FairPlay), YouTube / Instagram / TikTok (no direct URLs), and hosts without CORS headers.</p>
+        <p><strong className="text-foreground">HLS output:</strong> streams are saved as a single .ts file — plays directly in VLC, MPV or IINA.</p>
+        <p><strong className="text-foreground">Only download videos you own or have rights to.</strong> Respect each platform's terms of service.</p>
+      </div>
+    </div>
+  );
+}

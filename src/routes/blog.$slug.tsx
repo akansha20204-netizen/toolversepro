@@ -1,4 +1,5 @@
 import { createFileRoute, notFound, Link } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { BLOG_POSTS, getPost } from "@/data/blog";
 import * as Icons from "lucide-react";
 
@@ -45,6 +46,7 @@ export const Route = createFileRoute("/blog/$slug")({
 
 function PostPage() {
   const { post } = Route.useLoaderData();
+  useEffect(() => { window.scrollTo({ top: 0, behavior: "auto" }); }, [post.slug]);
   const related = BLOG_POSTS.filter((p) => p.slug !== post.slug).slice(0, 3);
   // Extract h2s for TOC
   const tocMatches: string[] = [];

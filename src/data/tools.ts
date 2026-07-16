@@ -132,6 +132,7 @@ export const TOOLS: ToolMeta[] = [
   { slug: "password-generator", name: "Password Generator", category: "developer", description: "Generate strong, random passwords.", icon: "KeyRound", keywords: ["password"], popular: true },
   { slug: "uuid-generator", name: "UUID Generator", category: "developer", description: "Generate v4 UUIDs in bulk.", icon: "Fingerprint", keywords: ["uuid"] },
   { slug: "json-to-csv-converter", name: "JSON to CSV Converter", category: "developer", description: "Convert JSON files or pasted JSON to downloadable CSV with nested key flattening.", icon: "FileSpreadsheet", keywords: ["json", "csv", "convert", "export"], latest: true },
+  { slug: "video-downloader", name: "Video Downloader (MP4 / M3U8)", category: "developer", description: "Download direct MP4 links or HLS .m3u8 streams straight from your browser — no server, no upload.", icon: "Download", keywords: ["video", "download", "m3u8", "mp4", "hls"], latest: true, trending: true },
 
   // Unit Converters (10)
   { slug: "length-converter", name: "Length Converter", category: "converter", description: "Meters, feet, inches, miles and more.", icon: "Ruler", keywords: ["length"], popular: true },
