@@ -47,6 +47,7 @@ export const toolRegistry: Record<string, ComponentType> = {
   "password-generator": D.PasswordGenerator,
   "uuid-generator": D.UUIDGenerator,
   "json-to-csv-converter": D.JsonToCsvConverter,
+  "video-downloader": D.VideoDownloader,
   // Converters
   "length-converter": U.LengthConverter,
   "weight-converter": U.WeightConverter,
