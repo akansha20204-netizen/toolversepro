@@ -352,9 +352,12 @@ export function JsonToCsvConverter() {
 // -------- Video Downloader (MP4 direct + HLS .m3u8) --------
 type DlStatus = "idle" | "fetching" | "downloading" | "concatenating" | "done" | "error";
 
+const proxied = (u: string) => `/api/public/video-proxy?url=${encodeURIComponent(u)}`;
+
 function resolveUrl(base: string, ref: string): string {
   try { return new URL(ref, base).toString(); } catch { return ref; }
 }
+
 
 function parseM3U8(text: string, baseUrl: string): { segments: string[]; variants: { url: string; bandwidth: number }[] } {
   const lines = text.split(/\r?\n/);
