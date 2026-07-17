@@ -468,7 +468,7 @@ export function VideoDownloader() {
         variants.sort((a, b) => b.bandwidth - a.bandwidth);
         const chosen = variants[0].url;
         setMsg("Master playlist detected. Loading highest-quality variant…");
-        const varRes = await fetch(chosen, { signal: ctl.signal, mode: "cors" });
+        const varRes = await fetch(proxied(chosen), { signal: ctl.signal });
         if (!varRes.ok) throw new Error(`Variant playlist fetch failed: HTTP ${varRes.status}`);
         const varText = await varRes.text();
         baseUrl = chosen;
