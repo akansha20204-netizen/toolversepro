@@ -133,6 +133,31 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const { queryClient } = Route.useRouteContext();
+
+useEffect(() => {
+  if (!import.meta.env.PROD) return;
+
+  const script = document.createElement("script");
+  script.async = true;
+  script.src =
+    "https://www.googletagmanager.com/gtag/js?id=G-NRCFQJXYX";
+  document.head.appendChild(script);
+
+  const inlineScript = document.createElement("script");
+  inlineScript.innerHTML = `
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-NRCFQJXYX');
+  `;
+  document.head.appendChild(inlineScript);
+
+  return () => {
+    document.head.removeChild(script);
+    document.head.removeChild(inlineScript);
+  };
+}, []);
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
