@@ -456,7 +456,7 @@ export function VideoDownloader() {
       // HLS .m3u8 flow
       setStatus("fetching");
       setMsg("Fetching playlist…");
-      const playlistRes = await fetch(trimmed, { signal: ctl.signal, mode: "cors" });
+      const playlistRes = await fetch(proxied(trimmed), { signal: ctl.signal });
       if (!playlistRes.ok) throw new Error(`Playlist fetch failed: HTTP ${playlistRes.status}`);
       const playlistText = await playlistRes.text();
 
