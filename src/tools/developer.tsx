@@ -422,9 +422,11 @@ export function VideoDownloader() {
     setMsg("Loading MP4 converter (first run may take a moment)…");
     const CORE_VER = "0.12.6";
     const FF_VER = "0.12.10";
+    const ffUrl = `https://esm.sh/@ffmpeg/ffmpeg@${FF_VER}?bundle`;
+    const utilUrl = `https://esm.sh/@ffmpeg/util@0.12.1?bundle`;
     const [{ FFmpeg }, { toBlobURL }] = await Promise.all([
-      import(/* @vite-ignore */ `https://esm.sh/@ffmpeg/ffmpeg@${FF_VER}?bundle`),
-      import(/* @vite-ignore */ `https://esm.sh/@ffmpeg/util@0.12.1?bundle`),
+      import(/* @vite-ignore */ ffUrl),
+      import(/* @vite-ignore */ utilUrl),
     ]);
     const ff = new FFmpeg();
     const baseURL = `https://unpkg.com/@ffmpeg/core@${CORE_VER}/dist/umd`;
