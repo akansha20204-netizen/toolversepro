@@ -3,7 +3,7 @@ import type {} from "@tanstack/react-start";
 import { TOOLS, CATEGORIES } from "@/data/tools";
 import { BLOG_POSTS } from "@/data/blog";
 
-const BASE_URL = "";
+const BASE_URL = "https://toolsforuse.online";
 
 export const Route = createFileRoute("/sitemap.xml")({
   server: {

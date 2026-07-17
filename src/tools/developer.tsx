@@ -352,9 +352,12 @@ export function JsonToCsvConverter() {
 // -------- Video Downloader (MP4 direct + HLS .m3u8) --------
 type DlStatus = "idle" | "fetching" | "downloading" | "concatenating" | "done" | "error";
 
+const proxied = (u: string) => `/api/public/video-proxy?url=${encodeURIComponent(u)}`;
+
 function resolveUrl(base: string, ref: string): string {
   try { return new URL(ref, base).toString(); } catch { return ref; }
 }
+
 
 function parseM3U8(text: string, baseUrl: string): { segments: string[]; variants: { url: string; bandwidth: number }[] } {
   const lines = text.split(/\r?\n/);
@@ -427,7 +430,7 @@ export function VideoDownloader() {
         // Direct file (mp4/mov/webm/...)
         setStatus("downloading");
         setMsg("Downloading video…");
-        const res = await fetch(trimmed, { signal: ctl.signal, mode: "cors" });
+        const res = await fetch(proxied(trimmed), { signal: ctl.signal });
         if (!res.ok) throw new Error(`Server returned HTTP ${res.status}`);
         const total = +(res.headers.get("content-length") || 0);
         const reader = res.body?.getReader();
@@ -453,7 +456,7 @@ export function VideoDownloader() {
       // HLS .m3u8 flow
       setStatus("fetching");
       setMsg("Fetching playlist…");
-      const playlistRes = await fetch(trimmed, { signal: ctl.signal, mode: "cors" });
+      const playlistRes = await fetch(proxied(trimmed), { signal: ctl.signal });
       if (!playlistRes.ok) throw new Error(`Playlist fetch failed: HTTP ${playlistRes.status}`);
       const playlistText = await playlistRes.text();
 
@@ -465,7 +468,7 @@ export function VideoDownloader() {
         variants.sort((a, b) => b.bandwidth - a.bandwidth);
         const chosen = variants[0].url;
         setMsg("Master playlist detected. Loading highest-quality variant…");
-        const varRes = await fetch(chosen, { signal: ctl.signal, mode: "cors" });
+        const varRes = await fetch(proxied(chosen), { signal: ctl.signal });
         if (!varRes.ok) throw new Error(`Variant playlist fetch failed: HTTP ${varRes.status}`);
         const varText = await varRes.text();
         baseUrl = chosen;
@@ -488,7 +491,7 @@ export function VideoDownloader() {
         while (true) {
           const i = idx++;
           if (i >= segments.length) return;
-          const segRes = await fetch(segments[i], { signal: ctl.signal, mode: "cors" });
+          const segRes = await fetch(proxied(segments[i]), { signal: ctl.signal });
           if (!segRes.ok) throw new Error(`Segment ${i + 1} failed: HTTP ${segRes.status}`);
           parts[i] = new Uint8Array(await segRes.arrayBuffer());
           completed++;
