@@ -491,7 +491,7 @@ export function VideoDownloader() {
         while (true) {
           const i = idx++;
           if (i >= segments.length) return;
-          const segRes = await fetch(segments[i], { signal: ctl.signal, mode: "cors" });
+          const segRes = await fetch(proxied(segments[i]), { signal: ctl.signal });
           if (!segRes.ok) throw new Error(`Segment ${i + 1} failed: HTTP ${segRes.status}`);
           parts[i] = new Uint8Array(await segRes.arrayBuffer());
           completed++;
