@@ -430,7 +430,7 @@ export function VideoDownloader() {
         // Direct file (mp4/mov/webm/...)
         setStatus("downloading");
         setMsg("Downloading video…");
-        const res = await fetch(trimmed, { signal: ctl.signal, mode: "cors" });
+        const res = await fetch(proxied(trimmed), { signal: ctl.signal });
         if (!res.ok) throw new Error(`Server returned HTTP ${res.status}`);
         const total = +(res.headers.get("content-length") || 0);
         const reader = res.body?.getReader();
