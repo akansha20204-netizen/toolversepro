@@ -383,13 +383,17 @@ function parseM3U8(text: string, baseUrl: string): { segments: string[]; variant
   return { segments, variants };
 }
 
+type OutFormat = "ts" | "mp4";
+
 export function VideoDownloader() {
   const [url, setUrl] = useState("");
+  const [format, setFormat] = useState<OutFormat>("mp4");
   const [status, setStatus] = useState<DlStatus>("idle");
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
   const [progress, setProgress] = useState({ done: 0, total: 0 });
   const abortRef = useRef<AbortController | null>(null);
+  const ffmpegRef = useRef<any>(null);
 
   const reset = () => {
     abortRef.current?.abort();
@@ -413,6 +417,41 @@ export function VideoDownloader() {
     } catch { return `video.${ext}`; }
   };
 
+  const loadFFmpeg = async () => {
+    if (ffmpegRef.current) return ffmpegRef.current;
+    setMsg("Loading MP4 converter (first run may take a moment)…");
+    const CORE_VER = "0.12.6";
+    const FF_VER = "0.12.10";
+    const [{ FFmpeg }, { toBlobURL }] = await Promise.all([
+      import(/* @vite-ignore */ `https://esm.sh/@ffmpeg/ffmpeg@${FF_VER}?bundle`),
+      import(/* @vite-ignore */ `https://esm.sh/@ffmpeg/util@0.12.1?bundle`),
+    ]);
+    const ff = new FFmpeg();
+    const baseURL = `https://unpkg.com/@ffmpeg/core@${CORE_VER}/dist/umd`;
+    await ff.load({
+      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
+      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
+    });
+    ffmpegRef.current = ff;
+    return ff;
+  };
+
+  const remuxTsToMp4 = async (tsBytes: Uint8Array): Promise<Uint8Array> => {
+    const ff = await loadFFmpeg();
+    setMsg("Converting to MP4…");
+    await ff.writeFile("in.ts", tsBytes);
+    // Copy streams (fast, no re-encode). If it fails, fall back to re-encode.
+    let code = await ff.exec(["-i", "in.ts", "-c", "copy", "-bsf:a", "aac_adtstoasc", "out.mp4"]);
+    if (code !== 0) {
+      setMsg("Fast remux failed — re-encoding (this is slower)…");
+      code = await ff.exec(["-i", "in.ts", "-c:v", "libx264", "-c:a", "aac", "-preset", "ultrafast", "out.mp4"]);
+      if (code !== 0) throw new Error("FFmpeg conversion failed.");
+    }
+    const data = (await ff.readFile("out.mp4")) as Uint8Array;
+    try { await ff.deleteFile("in.ts"); await ff.deleteFile("out.mp4"); } catch {}
+    return data;
+  };
+
   const start = async () => {
     setErr(""); setMsg(""); setProgress({ done: 0, total: 0 });
     const trimmed = url.trim();
@@ -434,20 +473,20 @@ export function VideoDownloader() {
         if (!res.ok) throw new Error(`Server returned HTTP ${res.status}`);
         const total = +(res.headers.get("content-length") || 0);
         const reader = res.body?.getReader();
+        const chunks: Uint8Array[] = [];
         if (!reader) {
-          const blob = await res.blob();
-          triggerDownload(blob, fileNameFromUrl(trimmed, "mp4"));
+          const buf = new Uint8Array(await res.arrayBuffer());
+          chunks.push(buf);
         } else {
-          const chunks: Uint8Array[] = [];
           let received = 0;
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
             if (value) { chunks.push(value); received += value.length; setProgress({ done: received, total }); }
           }
-          const blob = new Blob(chunks as BlobPart[], { type: res.headers.get("content-type") || "video/mp4" });
-          triggerDownload(blob, fileNameFromUrl(trimmed, "mp4"));
         }
+        const blob = new Blob(chunks as BlobPart[], { type: res.headers.get("content-type") || "video/mp4" });
+        triggerDownload(blob, fileNameFromUrl(trimmed, "mp4"));
         setStatus("done");
         setMsg("Download complete.");
         return;
@@ -464,7 +503,6 @@ export function VideoDownloader() {
       let { segments, variants } = parseM3U8(playlistText, baseUrl);
 
       if (segments.length === 0 && variants.length > 0) {
-        // Master playlist — pick the highest bandwidth variant
         variants.sort((a, b) => b.bandwidth - a.bandwidth);
         const chosen = variants[0].url;
         setMsg("Master playlist detected. Loading highest-quality variant…");
@@ -484,7 +522,6 @@ export function VideoDownloader() {
       setProgress({ done: 0, total: segments.length });
       const parts: Uint8Array[] = new Array(segments.length);
 
-      // Parallel downloads with limited concurrency
       const CONCURRENCY = 6;
       let idx = 0; let completed = 0;
       const workers = Array.from({ length: Math.min(CONCURRENCY, segments.length) }, async () => {
@@ -507,10 +544,19 @@ export function VideoDownloader() {
       const merged = new Uint8Array(totalBytes);
       let off = 0;
       for (const p of parts) { merged.set(p, off); off += p.length; }
-      const blob = new Blob([merged as BlobPart], { type: "video/mp2t" });
-      triggerDownload(blob, fileNameFromUrl(trimmed, "ts"));
-      setStatus("done");
-      setMsg(`Downloaded ${segments.length} segments (${(totalBytes / 1024 / 1024).toFixed(1)} MB). Saved as .ts — playable in VLC / MPV.`);
+
+      if (format === "mp4") {
+        const mp4Bytes = await remuxTsToMp4(merged);
+        const blob = new Blob([mp4Bytes as BlobPart], { type: "video/mp4" });
+        triggerDownload(blob, fileNameFromUrl(trimmed, "mp4"));
+        setStatus("done");
+        setMsg(`Downloaded ${segments.length} segments and converted to MP4 (${(mp4Bytes.length / 1024 / 1024).toFixed(1)} MB).`);
+      } else {
+        const blob = new Blob([merged as BlobPart], { type: "video/mp2t" });
+        triggerDownload(blob, fileNameFromUrl(trimmed, "ts"));
+        setStatus("done");
+        setMsg(`Downloaded ${segments.length} segments (${(totalBytes / 1024 / 1024).toFixed(1)} MB). Saved as .ts — playable in VLC / MPV.`);
+      }
     } catch (e: any) {
       if (e?.name === "AbortError") { setMsg("Cancelled."); setStatus("idle"); return; }
       setStatus("error");
@@ -538,6 +584,13 @@ export function VideoDownloader() {
           spellCheck={false}
           autoComplete="off"
         />
+      </Field>
+
+      <Field label="Output format (HLS streams)">
+        <TSelect value={format} onChange={(e) => setFormat(e.target.value as OutFormat)}>
+          <option value="mp4">MP4 — universal, plays everywhere (converts in-browser)</option>
+          <option value="ts">TS — fastest, no conversion (plays in VLC / MPV)</option>
+        </TSelect>
       </Field>
 
       <div className="flex flex-wrap gap-2">
@@ -568,9 +621,10 @@ export function VideoDownloader() {
       )}
 
       <div className="rounded-xl border border-border bg-muted/30 p-4 text-xs text-muted-foreground space-y-1">
-        <p><strong className="text-foreground">What works:</strong> direct MP4/WebM/MOV file URLs and unencrypted HLS .m3u8 playlists that allow cross-origin requests (CORS).</p>
-        <p><strong className="text-foreground">What does not work:</strong> DRM-protected streams (Widevine / FairPlay), YouTube / Instagram / TikTok (no direct URLs), and hosts without CORS headers.</p>
-        <p><strong className="text-foreground">HLS output:</strong> streams are saved as a single .ts file — plays directly in VLC, MPV or IINA.</p>
+        <p><strong className="text-foreground">What works:</strong> direct MP4/WebM/MOV file URLs and unencrypted HLS .m3u8 playlists.</p>
+        <p><strong className="text-foreground">What does not work:</strong> DRM-protected streams (Widevine / FairPlay) and YouTube / Instagram / TikTok (no direct URLs).</p>
+        <p><strong className="text-foreground">MP4 output:</strong> HLS segments are downloaded then remuxed to MP4 in your browser using FFmpeg (WebAssembly). The FFmpeg core (~30 MB) is fetched from a CDN on first use and cached.</p>
+        <p><strong className="text-foreground">TS output:</strong> raw HLS segments joined into a single .ts file — instant, no conversion, plays in VLC / MPV / IINA.</p>
         <p><strong className="text-foreground">Only download videos you own or have rights to.</strong> Respect each platform's terms of service.</p>
       </div>
     </div>
