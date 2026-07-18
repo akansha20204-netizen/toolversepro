@@ -20,15 +20,6 @@ export const Route = createFileRoute("/")({
   }),
   component: Home,
 });
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-NRCFQQJXYX"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-NRCFQQJXYX');
-</script>
 function CategoryPill({ id }: { id: ToolCategory }) {
   const c = CATEGORIES[id];
   const Icon = (Icons[c.icon as keyof typeof Icons] as any) ?? Icons.Wrench;
