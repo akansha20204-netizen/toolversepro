@@ -133,31 +133,47 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
 
-useEffect(() => {
-  if (!import.meta.env.PROD) return;
+  useEffect(() => {
+    if (!import.meta.env.PROD) return;
+    const GA_ID = "G-NRCFQJXYX";
 
-  const script = document.createElement("script");
-  script.async = true;
-  script.src =
-    "https://www.googletagmanager.com/gtag/js?id=G-NRCFQJXYX";
-  document.head.appendChild(script);
+    const script = document.createElement("script");
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
+    document.head.appendChild(script);
 
-  const inlineScript = document.createElement("script");
-  inlineScript.innerHTML = `
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-NRCFQJXYX');
-  `;
-  document.head.appendChild(inlineScript);
+    const inlineScript = document.createElement("script");
+    inlineScript.innerHTML = `
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      window.gtag = gtag;
+      gtag('js', new Date());
+      gtag('config', '${GA_ID}', { send_page_view: false });
+    `;
+    document.head.appendChild(inlineScript);
 
-  return () => {
-    document.head.removeChild(script);
-    document.head.removeChild(inlineScript);
-  };
-}, []);
+    const sendPageView = () => {
+      const g = (window as any).gtag;
+      if (typeof g === "function") {
+        g("event", "page_view", {
+          page_path: window.location.pathname + window.location.search,
+          page_location: window.location.href,
+          page_title: document.title,
+        });
+      }
+    };
+    sendPageView();
+    const unsub = router.subscribe("onResolved", () => sendPageView());
+
+    return () => {
+      unsub();
+      script.remove();
+      inlineScript.remove();
+    };
+  }, [router]);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
