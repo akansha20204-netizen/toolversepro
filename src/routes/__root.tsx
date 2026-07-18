@@ -140,7 +140,7 @@ function RootComponent() {
     const host = window.location.hostname;
     // Skip only on local dev; Lovable published builds run in dev mode but still need analytics.
     if (host === "localhost" || host === "127.0.0.1" || host.endsWith(".lovableproject.com")) return;
-    const GA_ID = "G-NRCFQJXYX";
+    const GA_ID = "G-NRCFQQJXYX";
 
     const script = document.createElement("script");
     script.async = true;
