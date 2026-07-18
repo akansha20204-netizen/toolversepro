@@ -136,7 +136,10 @@ function RootComponent() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!import.meta.env.PROD) return;
+    if (typeof window === "undefined") return;
+    const host = window.location.hostname;
+    // Skip only on local dev; Lovable published builds run in dev mode but still need analytics.
+    if (host === "localhost" || host === "127.0.0.1" || host.endsWith(".lovableproject.com")) return;
     const GA_ID = "G-NRCFQJXYX";
 
     const script = document.createElement("script");
