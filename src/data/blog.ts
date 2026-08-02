@@ -1,3 +1,5 @@
+import { TOOL_BLOG_POSTS } from "./tool-blogs";
+
 export interface BlogPost {
   slug: string;
   title: string;
