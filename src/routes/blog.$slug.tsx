@@ -55,7 +55,7 @@ export const Route = createFileRoute("/blog/$slug")({
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "FAQPage",
-          mainEntity: tp.faqs.map((f) => ({
+          mainEntity: tp.faqs.map((f: { q: string; a: string }) => ({
             "@type": "Question",
             name: f.q,
             acceptedAnswer: { "@type": "Answer", text: f.a },
@@ -193,7 +193,7 @@ function PostPage() {
             <section className="mt-12">
               <h2 className="text-2xl font-bold">FAQ</h2>
               <div className="mt-4 space-y-3">
-                {toolPost.faqs.map((f) => (
+                {toolPost.faqs.map((f: { q: string; a: string }) => (
                   <details key={f.q} className="group rounded-2xl border border-border bg-card p-4">
                     <summary className="cursor-pointer list-none text-sm font-semibold marker:hidden">
                       <span className="mr-2 inline-block transition-transform group-open:rotate-90">▸</span>

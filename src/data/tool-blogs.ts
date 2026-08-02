@@ -88,6 +88,7 @@ function dateFor(i: number) {
 export interface ToolBlogPost extends BlogPost {
   toolSlug: string;
   updated: string;
+  metaDescription: string;
   focusKeyword: string;
   relatedKeywords: string[];
   faqs: { q: string; a: string }[];
@@ -115,6 +116,7 @@ export const TOOL_BLOG_POSTS: ToolBlogPost[] = TOOL_BLOG_TOOLS.map((tool, i) => 
     tags: a.tags,
     image: BLOG_THUMBS[i % BLOG_THUMBS.length],
     content,
+    metaDescription: a.metaDescription,
     toolSlug: tool.slug,
     toolName: tool.name,
     toolDescription: tool.description,
