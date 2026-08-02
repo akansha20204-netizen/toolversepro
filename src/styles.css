@@ -175,3 +175,25 @@
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
+
+/* Blog CTA blocks rendered from generated article HTML */
+.blog-body .blog-cta {
+  margin: 1.75rem 0;
+}
+.blog-body .blog-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--primary-foreground);
+  background-image: var(--gradient-primary);
+  box-shadow: var(--shadow-glow);
+  text-decoration: none;
+}
+.blog-body h3 {
+  margin-top: 1.5rem;
+  font-weight: 600;
+}
