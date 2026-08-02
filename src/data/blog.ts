@@ -11,7 +11,7 @@ export interface BlogPost {
   content: string; // HTML
 }
 
-export const BLOG_POSTS: BlogPost[] = [
+const SEED_POSTS: BlogPost[] = [
   {
     slug: "complete-guide-to-online-calculators-2026",
     title: "The Complete Guide to Online Calculators in 2026",
@@ -250,5 +250,9 @@ export const BLOG_POSTS: BlogPost[] = [
 `,
   },
 ];
+
+export const BLOG_POSTS: BlogPost[] = [...TOOL_BLOG_POSTS, ...SEED_POSTS].sort(
+  (a, b) => (a.date < b.date ? 1 : -1),
+);
 
 export const getPost = (slug: string) => BLOG_POSTS.find((p) => p.slug === slug);
