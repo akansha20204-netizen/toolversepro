@@ -2431,15 +2431,15 @@ export const TOOL_ARTICLES_2: Record<string, ToolArticle> = {
     "examples": [
       {
         "title": "API Response Beautification",
-        "desc": "Imagine receiving a raw response like {\"id\":101,\"status\":\"success\",\"data\":[{\"sku\":\"AB-12\",\"price\":45.99}]}. After formatting, the tool creates a clear vertical structure where the sku and price are indented under the data array, making the nested hierarchy visible for verification."
+        "text": "Imagine receiving a raw response like {\"id\":101,\"status\":\"success\",\"data\":[{\"sku\":\"AB-12\",\"price\":45.99}]}. After formatting, the tool creates a clear vertical structure where the sku and price are indented under the data array, making the nested hierarchy visible for verification."
       },
       {
         "title": "Fixing Configuration Files",
-        "desc": "A developer pastes a package.json snippet that is causing errors. The formatter reveals a trailing comma after the last dependency: \"express\": \"^4.17.1\",. By seeing the structure clearly, the developer removes the comma, validating the file for the npm installer."
+        "text": "A developer pastes a package.json snippet that is causing errors. The formatter reveals a trailing comma after the last dependency: \"express\": \"^4.17.1\",. By seeing the structure clearly, the developer removes the comma, validating the file for the npm installer."
       },
       {
         "title": "Data Analysis for JSON Logs",
-        "desc": "A server log outputs a 5000-character JSON string documenting a transaction error. By pasting it here, the user can quickly jump to the 'error_code': 403 section and see the associated metadata like timestamps and request IDs without horizontal scrolling."
+        "text": "A server log outputs a 5000-character JSON string documenting a transaction error. By pasting it here, the user can quickly jump to the 'error_code': 403 section and see the associated metadata like timestamps and request IDs without horizontal scrolling."
       }
     ],
     "benefits": [
@@ -2588,15 +2588,15 @@ export const TOOL_ARTICLES_2: Record<string, ToolArticle> = {
     "examples": [
       {
         "title": "Debugging API Configs",
-        "desc": "A developer pastes a config object: { 'api_key': '123', 'timeout': 5000 }. The validator flags the single quotes around 'api_key' as invalid. After changing them to double quotes, the tool confirms the JSON is valid for use in a production environment."
+        "text": "A developer pastes a config object: { 'api_key': '123', 'timeout': 5000 }. The validator flags the single quotes around 'api_key' as invalid. After changing them to double quotes, the tool confirms the JSON is valid for use in a production environment."
       },
       {
         "title": "Fixing Nested Arrays",
-        "desc": "A data analyst has a list of coordinates: [[10.5, 20.1], [11.2, 19.8],]. The validator identifies the trailing comma after the final array element, which would cause a crash in many Python or JavaScript parsers. Removing the comma resolves the issue instantly."
+        "text": "A data analyst has a list of coordinates: [[10.5, 20.1], [11.2, 19.8],]. The validator identifies the trailing comma after the final array element, which would cause a crash in many Python or JavaScript parsers. Removing the comma resolves the issue instantly."
       },
       {
         "title": "Validating Large Exports",
-        "desc": "A user imports a 500KB JSON export from a legacy system. The tool detects an 'Unexpected token' at line 452 where a description field contains an unescaped double quote. The user adds a backslash to escape it, ensuring the data is now portable."
+        "text": "A user imports a 500KB JSON export from a legacy system. The tool detects an 'Unexpected token' at line 452 where a description field contains an unescaped double quote. The user adds a backslash to escape it, ensuring the data is now portable."
       }
     ],
     "benefits": [
@@ -3530,15 +3530,15 @@ export const TOOL_ARTICLES_2: Record<string, ToolArticle> = {
     "examples": [
       {
         "title": "Unpacking a Minified Analytics Script",
-        "desc": "A developer finds a 15KB minified tracking script like function(a,b,c){return a?b:c(a)}. After pasting it into the tool, it expands into a 40-line readable function, revealing exactly how data is being sent to the third-party API."
+        "text": "A developer finds a 15KB minified tracking script like function(a,b,c){return a?b:c(a)}. After pasting it into the tool, it expands into a 40-line readable function, revealing exactly how data is being sent to the third-party API."
       },
       {
         "title": "Debugging Production React Bundles",
-        "desc": "When a 'Cannot read property of undefined' error occurs on line 1, column 5432, the developer pastes the bundle chunk. The tool expands the single-line 500,000 character file into structured components, making the error location visible."
+        "text": "When a 'Cannot read property of undefined' error occurs on line 1, column 5432, the developer pastes the bundle chunk. The tool expands the single-line 500,000 character file into structured components, making the error location visible."
       },
       {
         "title": "Auditing a Legacy jQuery Plugin",
-        "desc": "An engineer inherits a project with an old plugin compressed into a single line. The beautifier restores the 1,200-line structure, allowing the engineer to identify and remove deprecated DOM manipulation methods safely."
+        "text": "An engineer inherits a project with an old plugin compressed into a single line. The beautifier restores the 1,200-line structure, allowing the engineer to identify and remove deprecated DOM manipulation methods safely."
       }
     ],
     "benefits": [
@@ -3687,15 +3687,15 @@ export const TOOL_ARTICLES_2: Record<string, ToolArticle> = {
     "examples": [
       {
         "title": "Database Credential Setup",
-        "desc": "When setting up a new MySQL database, a developer needs a secure password for the root user. They use the tool to generate a 32-character string like 'kP9!vR2$mN5*zQ8#wX1^bY4@tU7&jI0%'. This high-entropy string ensures the database is protected against unauthorized remote access attempts while meeting strict alphanumeric requirements."
+        "text": "When setting up a new MySQL database, a developer needs a secure password for the root user. They use the tool to generate a 32-character string like 'kP9!vR2$mN5*zQ8#wX1^bY4@tU7&jI0%'. This high-entropy string ensures the database is protected against unauthorized remote access attempts while meeting strict alphanumeric requirements."
       },
       {
         "title": "Wi-Fi WPA2 Security",
-        "desc": "A home user wants to secure their router with a strong WPA2 key. They select a 64-character length and include all character sets. The resulting string, such as '7G#k92Lp!qR5vW*z1M@x8B$4nE^t0Y&3P*qW1zV7mN9!kL5xJ2#bQ8@rT4$yU6', provides massive resistance to brute-force attacks from neighborhood intruders using specialized cracking hardware."
+        "text": "A home user wants to secure their router with a strong WPA2 key. They select a 64-character length and include all character sets. The resulting string, such as '7G#k92Lp!qR5vW*z1M@x8B$4nE^t0Y&3P*qW1zV7mN9!kL5xJ2#bQ8@rT4$yU6', provides massive resistance to brute-force attacks from neighborhood intruders using specialized cracking hardware."
       },
       {
         "title": "API Token Generation",
-        "desc": "An engineer building a REST API needs a secure secret for JWT signing. They generate a 128-character alphanumeric string. By using this tool, they avoid using hardcoded values or predictable sequences, ensuring that the integrity of the authentication tokens remains uncompromised across the entire production environment."
+        "text": "An engineer building a REST API needs a secure secret for JWT signing. They generate a 128-character alphanumeric string. By using this tool, they avoid using hardcoded values or predictable sequences, ensuring that the integrity of the authentication tokens remains uncompromised across the entire production environment."
       }
     ],
     "benefits": [
