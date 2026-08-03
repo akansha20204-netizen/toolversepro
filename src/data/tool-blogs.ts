@@ -1,8 +1,14 @@
 import type { BlogPost } from "./blog";
 import { TOOLS, CATEGORIES, type ToolMeta } from "./tools";
-import { TOOL_ARTICLES, type ToolArticle } from "./tool-blogs.generated";
+import { TOOL_ARTICLES as TOOL_ARTICLES_1, type ToolArticle } from "./tool-blogs.generated";
+import { TOOL_ARTICLES_2 } from "./tool-blogs-2.generated";
 
 export type { ToolArticle };
+
+const TOOL_ARTICLES: Record<string, ToolArticle> = { ...TOOL_ARTICLES_1, ...TOOL_ARTICLES_2 };
+
+/** Tools that have a dedicated, hand-crafted 1200x630 thumbnail. */
+const UNIQUE_THUMB_SLUGS = new Set(Object.keys(TOOL_ARTICLES_2));
 
 export const BLOG_THUMBS = [
   "/blog/tool-thumb-1.webp",
@@ -12,6 +18,9 @@ export const BLOG_THUMBS = [
   "/blog/tool-thumb-5.webp",
   "/blog/tool-thumb-6.webp",
 ];
+
+const thumbFor = (tool: ToolMeta, i: number) =>
+  UNIQUE_THUMB_SLUGS.has(tool.slug) ? `/blog/thumbs/${tool.slug}.webp` : BLOG_THUMBS[i % BLOG_THUMBS.length];
 
 export const slugifyHeading = (s: string) =>
   s
@@ -98,7 +107,7 @@ export interface ToolBlogPost extends BlogPost {
   popular: boolean;
 }
 
-const TOOL_BLOG_TOOLS = TOOLS.filter((t) => (t.category === "pdf" || t.category === "image") && TOOL_ARTICLES[t.slug]);
+const TOOL_BLOG_TOOLS = TOOLS.filter((t) => Boolean(TOOL_ARTICLES[t.slug]));
 
 export const TOOL_BLOG_POSTS: ToolBlogPost[] = TOOL_BLOG_TOOLS.map((tool, i) => {
   const a = TOOL_ARTICLES[tool.slug];
@@ -114,7 +123,7 @@ export const TOOL_BLOG_POSTS: ToolBlogPost[] = TOOL_BLOG_TOOLS.map((tool, i) => 
     updated: "2026-08-02",
     readingTime: Math.max(5, Math.round(wc / 220)),
     tags: a.tags,
-    image: BLOG_THUMBS[i % BLOG_THUMBS.length],
+    image: thumbFor(tool, i),
     content,
     metaDescription: a.metaDescription,
     toolSlug: tool.slug,
