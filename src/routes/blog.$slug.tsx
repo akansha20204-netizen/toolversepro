@@ -95,6 +95,42 @@ export const Route = createFileRoute("/blog/$slug")({
   ),
 });
 
+function ShareButtons({ title, url }: { title: string; url: string }) {
+  const enc = encodeURIComponent;
+  const links = [
+    { label: "Share on X", icon: Icons.Twitter, href: `https://twitter.com/intent/tweet?text=${enc(title)}&url=${enc(url)}` },
+    { label: "Share on Facebook", icon: Icons.Facebook, href: `https://www.facebook.com/sharer/sharer.php?u=${enc(url)}` },
+    { label: "Share on LinkedIn", icon: Icons.Linkedin, href: `https://www.linkedin.com/sharing/share-offsite/?url=${enc(url)}` },
+    { label: "Share on WhatsApp", icon: Icons.MessageCircle, href: `https://wa.me/?text=${enc(`${title} ${url}`)}` },
+  ];
+  return (
+    <div className="mt-5 flex flex-wrap items-center gap-2">
+      <span className="text-xs font-medium text-muted-foreground">Share:</span>
+      {links.map((l) => (
+        <a
+          key={l.label}
+          href={l.href}
+          target="_blank"
+          rel="noopener noreferrer nofollow"
+          aria-label={l.label}
+          title={l.label}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+        >
+          <l.icon className="h-4 w-4" />
+        </a>
+      ))}
+      <button
+        onClick={() => navigator.clipboard?.writeText(url)}
+        aria-label="Copy article link"
+        title="Copy link"
+        className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-card px-3 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+      >
+        <Icons.Link2 className="h-3.5 w-3.5" /> Copy link
+      </button>
+    </div>
+  );
+}
+
 function PostPage() {
   const { post, toolPost } = Route.useLoaderData();
   useEffect(() => {
