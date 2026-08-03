@@ -107,7 +107,7 @@ export interface ToolBlogPost extends BlogPost {
   popular: boolean;
 }
 
-const TOOL_BLOG_TOOLS = TOOLS.filter((t) => (t.category === "pdf" || t.category === "image") && TOOL_ARTICLES[t.slug]);
+const TOOL_BLOG_TOOLS = TOOLS.filter((t) => Boolean(TOOL_ARTICLES[t.slug]));
 
 export const TOOL_BLOG_POSTS: ToolBlogPost[] = TOOL_BLOG_TOOLS.map((tool, i) => {
   const a = TOOL_ARTICLES[tool.slug];
@@ -123,7 +123,7 @@ export const TOOL_BLOG_POSTS: ToolBlogPost[] = TOOL_BLOG_TOOLS.map((tool, i) => 
     updated: "2026-08-02",
     readingTime: Math.max(5, Math.round(wc / 220)),
     tags: a.tags,
-    image: BLOG_THUMBS[i % BLOG_THUMBS.length],
+    image: thumbFor(tool, i),
     content,
     metaDescription: a.metaDescription,
     toolSlug: tool.slug,
