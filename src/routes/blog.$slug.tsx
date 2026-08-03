@@ -151,6 +151,8 @@ function PostPage() {
 
       <p className="mt-6 max-w-3xl text-base text-muted-foreground">{post.excerpt}</p>
 
+      <ShareButtons title={post.title} url={`${SITE}/blog/${post.slug}`} />
+
       {/* Primary CTA */}
       {tool && (
         <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-border glass-strong p-5 sm:flex-row sm:items-center sm:justify-between">
