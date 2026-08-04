@@ -2,13 +2,15 @@ import type { BlogPost } from "./blog";
 import { TOOLS, CATEGORIES, type ToolMeta } from "./tools";
 import { TOOL_ARTICLES as TOOL_ARTICLES_1, type ToolArticle } from "./tool-blogs.generated";
 import { TOOL_ARTICLES_2 } from "./tool-blogs-2.generated";
+import { TOOL_ARTICLES_3 } from "./tool-blogs-3.generated";
 
 export type { ToolArticle };
 
-const TOOL_ARTICLES: Record<string, ToolArticle> = { ...TOOL_ARTICLES_1, ...TOOL_ARTICLES_2 };
+const TOOL_ARTICLES: Record<string, ToolArticle> = { ...TOOL_ARTICLES_1, ...TOOL_ARTICLES_2, ...TOOL_ARTICLES_3 };
 
 /** Tools that have a dedicated, hand-crafted 1200x630 thumbnail. */
-const UNIQUE_THUMB_SLUGS = new Set(Object.keys(TOOL_ARTICLES_2));
+const UNIQUE_THUMB_SLUGS = new Set([...Object.keys(TOOL_ARTICLES_2), ...Object.keys(TOOL_ARTICLES_3)]);
+
 
 export const BLOG_THUMBS = [
   "/blog/tool-thumb-1.webp",
