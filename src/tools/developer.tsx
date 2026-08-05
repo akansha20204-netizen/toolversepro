@@ -534,6 +534,8 @@ export function VideoDownloader() {
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
   const [progress, setProgress] = useState({ done: 0, total: 0 });
+  const [info, setInfo] = useState("");
+
   const abortRef = useRef<AbortController | null>(null);
   const ffmpegRef = useRef<any>(null);
 
