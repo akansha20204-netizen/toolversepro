@@ -882,6 +882,8 @@ export function VideoDownloader() {
           <div className="text-xs text-muted-foreground">
             {msg} {progress.total > 0 && `(${progress.done}/${progress.total}${status === "downloading" && !url.match(/\.m3u8/i) && progress.total ? " bytes" : ""})`}
           </div>
+          {info && <div className="text-xs font-medium text-foreground">{info}</div>}
+
         </div>
       )}
 
