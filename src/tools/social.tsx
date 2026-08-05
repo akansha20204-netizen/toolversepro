@@ -30,7 +30,6 @@ const words = (s: string) => s.trim().split(/\s+/).filter(Boolean);
 
 const slugWord = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "");
 
-const tagFrom = (s: string) => `#${slugWord(s)}`;
 
 function CopyBtn({ text, label = "Copy" }: { text: string; label?: string }) {
   const [done, setDone] = useState(false);
@@ -593,4 +592,3 @@ export function YouTubeCaptionGenerator() {
   );
 }
 
-export const __unusedTagFrom = tagFrom;
