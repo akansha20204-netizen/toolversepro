@@ -4,7 +4,8 @@ export type ToolCategory =
   | "pdf"
   | "text"
   | "developer"
-  | "converter";
+  | "converter"
+  | "social";
 
 export interface ToolMeta {
   slug: string;
@@ -58,6 +59,12 @@ export const CATEGORIES: Record<
     description: "Length, weight, temperature & more",
     icon: "ArrowLeftRight",
     color: "from-amber-500 to-yellow-600",
+  },
+  social: {
+    name: "Social Media Tools",
+    description: "Captions, hashtags & titles for Instagram and YouTube",
+    icon: "Share2",
+    color: "from-fuchsia-500 to-pink-600",
   },
 };
 
@@ -145,6 +152,13 @@ export const TOOLS: ToolMeta[] = [
   { slug: "data-converter", name: "Data Storage Converter", category: "converter", description: "Bytes, KB, MB, GB, TB.", icon: "HardDrive", keywords: ["data"], trending: true },
   { slug: "pressure-converter", name: "Pressure Converter", category: "converter", description: "Pascal, bar, PSI and atmospheres.", icon: "Wind", keywords: ["pressure"], latest: true },
   { slug: "energy-converter", name: "Energy Converter", category: "converter", description: "Joules, calories, kWh and more.", icon: "Zap", keywords: ["energy"], latest: true },
+
+  // ---------- Social Media Tools ----------
+  { slug: "instagram-caption-generator", name: "Instagram Caption Generator", category: "social", description: "Generate catchy Instagram captions with or without emojis in seconds.", icon: "Instagram", keywords: ["instagram", "caption", "social media"], featured: true, trending: true, latest: true },
+  { slug: "instagram-hashtag-generator", name: "Instagram Hashtag Generator", category: "social", description: "Get up to 50 relevant Instagram hashtags mixing high-volume and niche tags.", icon: "Hash", keywords: ["instagram", "hashtag", "reach"], popular: true, trending: true, latest: true },
+  { slug: "youtube-hashtag-generator", name: "YouTube Hashtag Generator", category: "social", description: "Generate SEO-friendly YouTube hashtags for any video topic.", icon: "Hash", keywords: ["youtube", "hashtag", "seo"], trending: true, latest: true },
+  { slug: "youtube-title-generator", name: "YouTube Title Generator", category: "social", description: "Create clickable YouTube titles with an SEO score for each option.", icon: "Youtube", keywords: ["youtube", "title", "ctr"], featured: true, popular: true, latest: true },
+  { slug: "youtube-caption-generator", name: "YouTube Caption Generator", category: "social", description: "Write YouTube descriptions with chapters, CTAs and hashtags instantly.", icon: "Captions", keywords: ["youtube", "description", "caption"], latest: true },
 ];
 
 export const getTool = (slug: string) => TOOLS.find((t) => t.slug === slug);

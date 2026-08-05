@@ -6,6 +6,7 @@ import * as D from "./developer";
 import * as U from "./converters";
 import * as I from "./images";
 import * as P from "./pdfs";
+import * as S from "./social";
 
 export const toolRegistry: Record<string, ComponentType> = {
   // Calculators
@@ -86,4 +87,10 @@ export const toolRegistry: Record<string, ComponentType> = {
   "pdf-reorder-pages": P.PDFReorder,
   "pdf-preview": P.PDFPreview,
   "pdf-page-counter": P.PDFPageCounter,
+  // Social Media
+  "instagram-caption-generator": S.InstagramCaptionGenerator,
+  "instagram-hashtag-generator": S.InstagramHashtagGenerator,
+  "youtube-hashtag-generator": S.YouTubeHashtagGenerator,
+  "youtube-title-generator": S.YouTubeTitleGenerator,
+  "youtube-caption-generator": S.YouTubeCaptionGenerator,
 };
