@@ -542,7 +542,7 @@ export function VideoDownloader() {
   const reset = () => {
     abortRef.current?.abort();
     abortRef.current = null;
-    setStatus("idle"); setMsg(""); setErr(""); setProgress({ done: 0, total: 0 });
+    setStatus("idle"); setMsg(""); setErr(""); setProgress({ done: 0, total: 0 }); setInfo("");
   };
 
   const triggerDownload = (blob: Blob, filename: string) => {
