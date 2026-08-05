@@ -358,30 +358,172 @@ function resolveUrl(base: string, ref: string): string {
   try { return new URL(ref, base).toString(); } catch { return ref; }
 }
 
+// ---- HLS playlist parsing ----------------------------------------------------
+type Variant = {
+  url: string;
+  bandwidth: number;
+  width: number;
+  height: number;
+  subsGroup?: string;
+};
+type Rendition = { type: string; groupId: string; name: string; language?: string; uri?: string; isDefault: boolean };
+type KeyInfo = { method: string; uri: string; iv?: string } | null;
+type Segment = { url: string; duration: number; key: KeyInfo; seq: number };
 
-function parseM3U8(text: string, baseUrl: string): { segments: string[]; variants: { url: string; bandwidth: number }[] } {
+function parseAttrs(line: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  const body = line.slice(line.indexOf(":") + 1);
+  const re = /([A-Z0-9-]+)=("[^"]*"|[^,]*)/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(body))) {
+    out[m[1].toUpperCase()] = m[2].replace(/^"|"$/g, "");
+  }
+  return out;
+}
+
+const isMasterPlaylist = (text: string) => /#EXT-X-STREAM-INF/i.test(text);
+
+function parseMaster(text: string, baseUrl: string): { variants: Variant[]; renditions: Rendition[] } {
   const lines = text.split(/\r?\n/);
-  const segments: string[] = [];
-  const variants: { url: string; bandwidth: number }[] = [];
-  let pendingBw = 0;
+  const variants: Variant[] = [];
+  const renditions: Rendition[] = [];
+  let pending: Record<string, string> | null = null;
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line) continue;
-    if (line.startsWith("#EXT-X-STREAM-INF")) {
-      const m = /BANDWIDTH=(\d+)/i.exec(line);
-      pendingBw = m ? +m[1] : 0;
+    if (/^#EXT-X-MEDIA:/i.test(line)) {
+      const a = parseAttrs(line);
+      renditions.push({
+        type: (a["TYPE"] || "").toUpperCase(),
+        groupId: a["GROUP-ID"] || "",
+        name: a["NAME"] || a["LANGUAGE"] || "track",
+        language: a["LANGUAGE"],
+        uri: a["URI"] ? resolveUrl(baseUrl, a["URI"]) : undefined,
+        isDefault: /YES/i.test(a["DEFAULT"] || ""),
+      });
+      continue;
+    }
+    if (/^#EXT-X-STREAM-INF/i.test(line)) {
+      pending = parseAttrs(line);
       continue;
     }
     if (line.startsWith("#")) continue;
-    if (pendingBw > 0) {
-      variants.push({ url: resolveUrl(baseUrl, line), bandwidth: pendingBw });
-      pendingBw = 0;
-    } else {
-      segments.push(resolveUrl(baseUrl, line));
+    if (pending) {
+      const res = /(\d+)x(\d+)/i.exec(pending["RESOLUTION"] || "");
+      variants.push({
+        url: resolveUrl(baseUrl, line),
+        bandwidth: +(pending["BANDWIDTH"] || pending["AVERAGE-BANDWIDTH"] || 0) || 0,
+        width: res ? +res[1] : 0,
+        height: res ? +res[2] : 0,
+        subsGroup: pending["SUBTITLES"],
+      });
+      pending = null;
     }
   }
-  return { segments, variants };
+  return { variants, renditions };
 }
+
+// Highest resolution first; ties broken by highest bandwidth. Variants without
+// a RESOLUTION attribute are ranked purely by bandwidth, after the sized ones.
+function rankVariants(variants: Variant[]): Variant[] {
+  return [...variants].sort((a, b) => {
+    const aPix = a.width * a.height;
+    const bPix = b.width * b.height;
+    if (aPix !== bPix) return bPix - aPix;
+    return b.bandwidth - a.bandwidth;
+  });
+}
+
+function parseMedia(text: string, baseUrl: string): { segments: Segment[]; totalDuration: number } {
+  const lines = text.split(/\r?\n/);
+  const segments: Segment[] = [];
+  let currentKey: KeyInfo = null;
+  let nextDuration = 0;
+  let seq = 0;
+  let totalDuration = 0;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    if (/^#EXT-X-MEDIA-SEQUENCE:/i.test(line)) {
+      seq = +line.split(":")[1] || 0;
+      continue;
+    }
+    if (/^#EXT-X-KEY:/i.test(line)) {
+      const a = parseAttrs(line);
+      const method = (a["METHOD"] || "NONE").toUpperCase();
+      currentKey = method === "NONE" ? null : { method, uri: resolveUrl(baseUrl, a["URI"] || ""), iv: a["IV"] };
+      continue;
+    }
+    if (/^#EXTINF:/i.test(line)) {
+      nextDuration = parseFloat(line.split(":")[1]) || 0;
+      continue;
+    }
+    if (line.startsWith("#")) continue;
+    segments.push({ url: resolveUrl(baseUrl, line), duration: nextDuration, key: currentKey, seq: seq + segments.length });
+    totalDuration += nextDuration;
+    nextDuration = 0;
+  }
+  return { segments, totalDuration };
+}
+
+// ---- fetch helpers ----------------------------------------------------------
+async function fetchWithRetry(url: string, signal: AbortSignal, tries = 3): Promise<Response> {
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= tries; attempt++) {
+    try {
+      const res = await fetch(proxied(url), { signal });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res;
+    } catch (e: any) {
+      if (e?.name === "AbortError") throw e;
+      lastErr = e;
+      if (attempt < tries) await new Promise((r) => setTimeout(r, 400 * attempt));
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error(String(lastErr));
+}
+
+function hexToBytes(hex: string): Uint8Array {
+  const clean = hex.replace(/^0x/i, "");
+  const out = new Uint8Array(clean.length / 2);
+  for (let i = 0; i < out.length; i++) out[i] = parseInt(clean.substr(i * 2, 2), 16);
+  return out;
+}
+
+function seqToIv(seq: number): Uint8Array {
+  const iv = new Uint8Array(16);
+  const view = new DataView(iv.buffer);
+  view.setUint32(12, seq >>> 0);
+  return iv;
+}
+
+// AES-128-CBC per RFC 8216. Segments are PKCS#7 padded, which WebCrypto strips.
+async function decryptSegment(
+  data: Uint8Array,
+  key: KeyInfo,
+  seq: number,
+  keyCache: Map<string, CryptoKey>,
+  signal: AbortSignal,
+): Promise<Uint8Array> {
+  if (!key) return data;
+  if (key.method !== "AES-128") {
+    throw new Error(`Unsupported HLS encryption method "${key.method}" (DRM streams cannot be downloaded).`);
+  }
+  let cryptoKey = keyCache.get(key.uri);
+  if (!cryptoKey) {
+    const res = await fetchWithRetry(key.uri, signal);
+    const raw = new Uint8Array(await res.arrayBuffer());
+    if (raw.length !== 16) throw new Error("The AES-128 key file is not publicly accessible or is invalid.");
+    cryptoKey = await crypto.subtle.importKey("raw", raw as BufferSource, "AES-CBC", false, ["decrypt"]);
+    keyCache.set(key.uri, cryptoKey);
+  }
+  const iv = key.iv ? hexToBytes(key.iv) : seqToIv(seq);
+  const plain = await crypto.subtle.decrypt({ name: "AES-CBC", iv: iv as BufferSource }, cryptoKey, data as BufferSource);
+  return new Uint8Array(plain);
+}
+
 
 type OutFormat = "ts" | "mp4";
 
