@@ -6,7 +6,7 @@ export const Route = createFileRoute("/categories")({
   head: () => ({
     meta: [
       { title: "All Categories — ToolHub Pro" },
-      { name: "description", content: "Browse all 6 tool categories on ToolHub Pro — calculators, images, PDFs, text, developer and unit converters." },
+      { name: "description", content: "Browse all 7 tool categories on ToolHub Pro — calculators, images, PDFs, text, developer, unit converters and social media tools." },
       { property: "og:title", content: "All Categories — ToolHub Pro" },
       { property: "og:url", content: "/categories" },
     ],
