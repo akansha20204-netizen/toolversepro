@@ -491,7 +491,7 @@ const OVERRIDES: Record<string, Partial<ToolContent>> = {
 // override. Crucially, this NEVER mentions file uploads or downloads unless
 // the category actually supports them (image, pdf).
 // -----------------------------------------------------------------------------
-type ContentShape = "calculator" | "text" | "developer" | "converter" | "image" | "pdf";
+type ContentShape = "calculator" | "text" | "developer" | "converter" | "image" | "pdf" | "social";
 
 function shapeOf(t: ToolMeta): ContentShape {
   return t.category as ContentShape;
@@ -546,6 +546,14 @@ function fallbackHowTo(shape: ContentShape, name: string): string[] {
         `Download the resulting PDF when processing finishes.`,
         `Use Reset to clear the queue and start again.`,
       ];
+    case "social":
+      return [
+        `Type your topic, keyword or short description into the ${name} input field.`,
+        `Pick the style and length options you want for the generated results.`,
+        `Click Generate to create a fresh batch of ideas instantly.`,
+        `Copy any single result, or copy the whole batch with one click.`,
+        `Click Regenerate for a completely new set of variations.`,
+      ];
   }
 }
 
@@ -558,6 +566,10 @@ function fallbackFeatures(shape: ContentShape, name: string) {
   ];
   if (shape === "image" || shape === "pdf") {
     base.push({ title: "Files stay private", desc: `Your file is processed locally and never leaves the browser tab.` });
+  }
+  if (shape === "social") {
+    base.push({ title: "Endless variations", desc: `Every Generate click reshuffles the templates, so you never get the same batch twice.` });
+    base.push({ title: "One-click copy", desc: `Copy an individual result or the entire batch straight to your clipboard.` });
   }
   if (shape === "developer" || shape === "text") {
     base.push({ title: "Copy with one click", desc: `Copy the output to your clipboard without opening any menu.` });
