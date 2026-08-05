@@ -653,45 +653,110 @@ export function VideoDownloader() {
         return;
       }
 
-      // HLS .m3u8 flow
+      // HLS .m3u8 flow — always resolve the highest-quality variant
       setStatus("fetching");
       setMsg("Fetching playlist…");
-      const playlistRes = await fetch(proxied(trimmed), { signal: ctl.signal });
-      if (!playlistRes.ok) throw new Error(`Playlist fetch failed: HTTP ${playlistRes.status}`);
+      setInfo("");
+      const playlistRes = await fetchWithRetry(trimmed, ctl.signal);
       const playlistText = await playlistRes.text();
 
       let baseUrl = trimmed;
-      let { segments, variants } = parseM3U8(playlistText, baseUrl);
+      let segments: Segment[] = [];
+      let totalDuration = 0;
+      let chosen: Variant | null = null;
+      let subsUri: string | undefined;
 
-      if (segments.length === 0 && variants.length > 0) {
-        variants.sort((a, b) => b.bandwidth - a.bandwidth);
-        const chosen = variants[0].url;
-        setMsg("Master playlist detected. Loading highest-quality variant…");
-        const varRes = await fetch(proxied(chosen), { signal: ctl.signal });
-        if (!varRes.ok) throw new Error(`Variant playlist fetch failed: HTTP ${varRes.status}`);
-        const varText = await varRes.text();
-        baseUrl = chosen;
-        segments = parseM3U8(varText, baseUrl).segments;
+      if (isMasterPlaylist(playlistText)) {
+        const { variants, renditions } = parseMaster(playlistText, baseUrl);
+        const ranked = rankVariants(variants);
+        if (ranked.length === 0) throw new Error("Master playlist contains no video variants.");
+
+        // Walk down the ranked list so an unavailable top rendition falls back
+        // to the next highest quality instead of failing.
+        let lastErr: unknown;
+        for (const v of ranked) {
+          try {
+            setMsg(
+              `Master playlist: ${ranked.length} variants. Selecting highest quality — ${
+                v.height ? `${v.width}×${v.height}` : "unknown resolution"
+              }…`,
+            );
+            const varRes = await fetchWithRetry(v.url, ctl.signal);
+            const varText = await varRes.text();
+            const parsed = parseMedia(varText, v.url);
+            if (parsed.segments.length === 0) throw new Error("variant playlist has no segments");
+            chosen = v;
+            baseUrl = v.url;
+            segments = parsed.segments;
+            totalDuration = parsed.totalDuration;
+            break;
+          } catch (e) {
+            lastErr = e;
+            if ((e as any)?.name === "AbortError") throw e;
+          }
+        }
+        if (!chosen) {
+          throw new Error(
+            `Could not load any video variant from the master playlist${
+              lastErr instanceof Error ? ` (${lastErr.message})` : ""
+            }.`,
+          );
+        }
+
+        // Subtitles: prefer the group referenced by the chosen variant.
+        const subs = renditions.filter(
+          (r) => r.type === "SUBTITLES" && r.uri && (!chosen!.subsGroup || r.groupId === chosen!.subsGroup),
+        );
+        subsUri = (subs.find((s) => s.isDefault) ?? subs[0])?.uri;
+      } else {
+        const parsed = parseMedia(playlistText, baseUrl);
+        segments = parsed.segments;
+        totalDuration = parsed.totalDuration;
       }
 
-      if (/#EXT-X-KEY/i.test(playlistText) && /METHOD=(?!NONE)/i.test(playlistText)) {
-        throw new Error("This stream is encrypted (DRM). Encrypted HLS is not supported.");
-      }
       if (segments.length === 0) throw new Error("No playable segments found in the playlist.");
+
+      // Validate sequence continuity before downloading anything.
+      for (let i = 1; i < segments.length; i++) {
+        if (segments[i].seq !== segments[i - 1].seq + 1) {
+          throw new Error(`Segment sequence gap detected at segment ${i + 1} — playlist is incomplete.`);
+        }
+      }
+
+      const bitrate = chosen?.bandwidth || (totalDuration > 0 ? 0 : 0);
+      const estBytes = bitrate && totalDuration ? (bitrate / 8) * totalDuration : 0;
+      setInfo(
+        [
+          chosen?.height ? `Quality: ${chosen.width}×${chosen.height}` : "Quality: single-rendition stream",
+          bitrate ? `Bitrate: ${(bitrate / 1_000_000).toFixed(2)} Mbps` : null,
+          `Segments: ${segments.length}`,
+          totalDuration ? `Duration: ${Math.round(totalDuration)}s` : null,
+          estBytes ? `Est. size: ${(estBytes / 1024 / 1024).toFixed(1)} MB` : null,
+          segments.some((s) => s.key) ? "AES-128 encrypted (key fetched automatically)" : null,
+          subsUri ? "Subtitles: available" : null,
+        ]
+          .filter(Boolean)
+          .join(" · "),
+      );
 
       setStatus("downloading");
       setProgress({ done: 0, total: segments.length });
       const parts: Uint8Array[] = new Array(segments.length);
+      const keyCache = new Map<string, CryptoKey>();
 
-      const CONCURRENCY = 6;
-      let idx = 0; let completed = 0;
-      const workers = Array.from({ length: Math.min(CONCURRENCY, segments.length) }, async () => {
+      // 8 parallel workers pulling from a shared cursor — order is preserved
+      // because each worker writes into its own index slot.
+      const CONCURRENCY = Math.min(8, segments.length);
+      let idx = 0;
+      let completed = 0;
+      const workers = Array.from({ length: CONCURRENCY }, async () => {
         while (true) {
           const i = idx++;
           if (i >= segments.length) return;
-          const segRes = await fetch(proxied(segments[i]), { signal: ctl.signal });
-          if (!segRes.ok) throw new Error(`Segment ${i + 1} failed: HTTP ${segRes.status}`);
-          parts[i] = new Uint8Array(await segRes.arrayBuffer());
+          const seg = segments[i];
+          const segRes = await fetchWithRetry(seg.url, ctl.signal, 3);
+          const raw = new Uint8Array(await segRes.arrayBuffer());
+          parts[i] = await decryptSegment(raw, seg.key, seg.seq, keyCache, ctl.signal);
           completed++;
           setProgress({ done: completed, total: segments.length });
           setMsg(`Downloading segment ${completed} of ${segments.length}…`);
@@ -699,25 +764,66 @@ export function VideoDownloader() {
       });
       await Promise.all(workers);
 
+      for (let i = 0; i < segments.length; i++) {
+        if (!parts[i]) throw new Error(`Segment ${i + 1} is missing — aborting to avoid a broken file.`);
+      }
+
       setStatus("concatenating");
       setMsg("Joining segments…");
       const totalBytes = parts.reduce((s, p) => s + p.length, 0);
       const merged = new Uint8Array(totalBytes);
       let off = 0;
-      for (const p of parts) { merged.set(p, off); off += p.length; }
+      for (let i = 0; i < parts.length; i++) {
+        merged.set(parts[i], off);
+        off += parts[i].length;
+        // Release each chunk as soon as it is copied to keep memory flat.
+        parts[i] = new Uint8Array(0);
+      }
+
+      // Subtitles are saved next to the video as a .vtt sidecar (no re-encoding).
+      const saveSubtitles = async () => {
+        if (!subsUri) return;
+        try {
+          const res = await fetchWithRetry(subsUri, ctl.signal);
+          const text = await res.text();
+          const vttParts: string[] = [];
+          if (/^#EXTM3U/i.test(text.trim())) {
+            const { segments: subSegs } = parseMedia(text, subsUri);
+            for (const s of subSegs) {
+              const r = await fetchWithRetry(s.url, ctl.signal);
+              vttParts.push(await r.text());
+            }
+          } else {
+            vttParts.push(text);
+          }
+          triggerDownload(
+            new Blob([vttParts.join("\n\n")], { type: "text/vtt" }),
+            fileNameFromUrl(trimmed, "vtt"),
+          );
+        } catch {
+          /* subtitles are best-effort — never block the video download */
+        }
+      };
 
       if (format === "mp4") {
         const mp4Bytes = await remuxTsToMp4(merged);
         const blob = new Blob([mp4Bytes as BlobPart], { type: "video/mp4" });
         triggerDownload(blob, fileNameFromUrl(trimmed, "mp4"));
+        await saveSubtitles();
         setStatus("done");
         setMsg(`Downloaded ${segments.length} segments and converted to MP4 (${(mp4Bytes.length / 1024 / 1024).toFixed(1)} MB).`);
       } else {
         const blob = new Blob([merged as BlobPart], { type: "video/mp2t" });
         triggerDownload(blob, fileNameFromUrl(trimmed, "ts"));
+        await saveSubtitles();
         setStatus("done");
-        setMsg(`Downloaded ${segments.length} segments (${(totalBytes / 1024 / 1024).toFixed(1)} MB). Saved as .ts — playable in VLC / MPV.`);
+        setMsg(
+          `Downloaded ${segments.length} segments (${(totalBytes / 1024 / 1024).toFixed(1)} MB)${
+            chosen?.height ? ` at ${chosen.width}×${chosen.height}` : ""
+          }. Saved as .ts — original quality, no re-encoding.`,
+        );
       }
+
     } catch (e: any) {
       if (e?.name === "AbortError") { setMsg("Cancelled."); setStatus("idle"); return; }
       setStatus("error");
