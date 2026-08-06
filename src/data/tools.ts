@@ -18,7 +18,10 @@ export interface ToolMeta {
   popular?: boolean;
   trending?: boolean;
   latest?: boolean;
+  /** Shows the tool in the homepage "Work with AI" section. */
+  ai?: boolean;
 }
+
 
 export const CATEGORIES: Record<
   ToolCategory,
