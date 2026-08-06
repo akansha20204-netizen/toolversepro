@@ -179,3 +179,4 @@ export const searchTools = (q: string) => {
       t.keywords.some((k) => k.includes(s)),
   );
 };
+export const AI_TOOLS = TOOLS.filter((t) => t.ai);

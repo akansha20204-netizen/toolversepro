@@ -7,6 +7,7 @@ import * as U from "./converters";
 import * as I from "./images";
 import * as P from "./pdfs";
 import * as S from "./social";
+import * as AI from "./ai";
 
 export const toolRegistry: Record<string, ComponentType> = {
   // Calculators
@@ -37,6 +38,7 @@ export const toolRegistry: Record<string, ComponentType> = {
   "slug-generator": T.SlugGenerator,
   "random-text": T.RandomText,
   // Developer
+  "ai-chat-assistant": AI.AIChatAssistant,
   "json-formatter": D.JSONFormatter,
   "json-validator": D.JSONValidator,
   "json-minifier": D.JSONMinifier,
