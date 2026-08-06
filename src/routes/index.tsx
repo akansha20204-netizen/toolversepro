@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Sparkles, Zap, Shield, Heart } from "lucide-react";
 import * as Icons from "lucide-react";
-import { CATEGORIES, TOOLS, getToolsByCategory, type ToolCategory } from "@/data/tools";
+import { AI_TOOLS, CATEGORIES, TOOLS, getToolsByCategory, type ToolCategory } from "@/data/tools";
 import { ToolCard } from "@/components/site/ToolCard";
 import { BLOG_POSTS } from "@/data/blog";
 import { useState } from "react";
@@ -60,6 +60,7 @@ function Section({
 function Home() {
   const featured = TOOLS.filter((t) => t.featured).slice(0, 8);
   const popular = TOOLS.filter((t) => t.popular).slice(0, 8);
+  const aiTools = AI_TOOLS;
   const trending = TOOLS.filter((t) => t.trending).slice(0, 6);
   const latest = TOOLS.filter((t) => t.latest).slice(0, 6);
   const [email, setEmail] = useState("");
@@ -162,7 +163,23 @@ function Home() {
         </div>
       </Section>
 
+      {/* Work with AI */}
+      {aiTools.length > 0 && (
+        <Section
+          title="🚀 Work with AI"
+          subtitle="Smart assistants that write, explain and generate for you — free and instant."
+          action={<Link to="/category/$slug" params={{ slug: "developer" }} className="text-sm font-medium text-primary hover:underline">More dev tools →</Link>}
+        >
+          <div className="rounded-3xl border border-border bg-gradient-to-br from-violet-500/10 via-fuchsia-500/5 to-transparent p-4 sm:p-6">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {aiTools.map((t) => <ToolCard key={t.slug} tool={t} />)}
+            </div>
+          </div>
+        </Section>
+      )}
+
       {/* Popular */}
+
       <Section title="Popular Tools" subtitle="Most-used tools this month.">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {popular.map((t) => <ToolCard key={t.slug} tool={t} />)}

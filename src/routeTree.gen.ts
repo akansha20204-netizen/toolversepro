@@ -28,6 +28,7 @@ import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as ToolsSlugRouteImport } from './routes/tools.$slug'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
+import { Route as ApiAiChatRouteImport } from './routes/api/ai-chat'
 import { Route as ApiPublicVideoProxyRouteImport } from './routes/api/public/video-proxy'
 
 const WriteForUsRoute = WriteForUsRouteImport.update({
@@ -125,6 +126,11 @@ const BlogSlugRoute = BlogSlugRouteImport.update({
   path: '/blog/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAiChatRoute = ApiAiChatRouteImport.update({
+  id: '/api/ai-chat',
+  path: '/api/ai-chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicVideoProxyRoute = ApiPublicVideoProxyRouteImport.update({
   id: '/api/public/video-proxy',
   path: '/api/public/video-proxy',
@@ -147,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/write-for-us': typeof WriteForUsRoute
+  '/api/ai-chat': typeof ApiAiChatRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
   '/tools/$slug': typeof ToolsSlugRoute
@@ -169,6 +176,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/write-for-us': typeof WriteForUsRoute
+  '/api/ai-chat': typeof ApiAiChatRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
   '/tools/$slug': typeof ToolsSlugRoute
@@ -192,6 +200,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/write-for-us': typeof WriteForUsRoute
+  '/api/ai-chat': typeof ApiAiChatRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
   '/tools/$slug': typeof ToolsSlugRoute
@@ -216,6 +225,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/write-for-us'
+    | '/api/ai-chat'
     | '/blog/$slug'
     | '/category/$slug'
     | '/tools/$slug'
@@ -238,6 +248,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/write-for-us'
+    | '/api/ai-chat'
     | '/blog/$slug'
     | '/category/$slug'
     | '/tools/$slug'
@@ -260,6 +271,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/write-for-us'
+    | '/api/ai-chat'
     | '/blog/$slug'
     | '/category/$slug'
     | '/tools/$slug'
@@ -283,6 +295,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   WriteForUsRoute: typeof WriteForUsRoute
+  ApiAiChatRoute: typeof ApiAiChatRoute
   BlogSlugRoute: typeof BlogSlugRoute
   CategorySlugRoute: typeof CategorySlugRoute
   ToolsSlugRoute: typeof ToolsSlugRoute
@@ -425,6 +438,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/ai-chat': {
+      id: '/api/ai-chat'
+      path: '/api/ai-chat'
+      fullPath: '/api/ai-chat'
+      preLoaderRoute: typeof ApiAiChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/video-proxy': {
       id: '/api/public/video-proxy'
       path: '/api/public/video-proxy'
@@ -451,6 +471,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   WriteForUsRoute: WriteForUsRoute,
+  ApiAiChatRoute: ApiAiChatRoute,
   BlogSlugRoute: BlogSlugRoute,
   CategorySlugRoute: CategorySlugRoute,
   ToolsSlugRoute: ToolsSlugRoute,

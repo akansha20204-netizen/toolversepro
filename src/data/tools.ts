@@ -18,7 +18,10 @@ export interface ToolMeta {
   popular?: boolean;
   trending?: boolean;
   latest?: boolean;
+  /** Shows the tool in the homepage "Work with AI" section. */
+  ai?: boolean;
 }
+
 
 export const CATEGORIES: Record<
   ToolCategory,
@@ -128,7 +131,9 @@ export const TOOLS: ToolMeta[] = [
   { slug: "random-text", name: "Random Text Generator", category: "text", description: "Generate random strings and paragraphs.", icon: "Shuffle", keywords: ["random"], latest: true },
 
   // Developer Tools (10)
+  { slug: "ai-chat-assistant", name: "AI Chat Assistant", category: "developer", description: "Free AI chat assistant online — ask coding, writing and study questions and get instant answers. No signup.", icon: "Bot", keywords: ["ai", "chat", "chatgpt", "gemini", "assistant", "ai chat", "ask ai", "developer ai", "coding ai", "ai chat online", "free ai chat", "chat assistant", "ai coding assistant"], featured: true, popular: true, trending: true, latest: true, ai: true },
   { slug: "json-formatter", name: "JSON Formatter", category: "developer", description: "Pretty-print and highlight JSON.", icon: "Braces", keywords: ["json"], featured: true, popular: true },
+
   { slug: "json-validator", name: "JSON Validator", category: "developer", description: "Validate JSON with precise error messages.", icon: "CheckCircle2", keywords: ["json"] },
   { slug: "json-minifier", name: "JSON Minifier", category: "developer", description: "Minify JSON to reduce payload size.", icon: "Minimize2", keywords: ["json"] },
   { slug: "html-beautifier", name: "HTML Beautifier", category: "developer", description: "Format messy HTML into clean markup.", icon: "Code", keywords: ["html"] },
@@ -174,3 +179,4 @@ export const searchTools = (q: string) => {
       t.keywords.some((k) => k.includes(s)),
   );
 };
+export const AI_TOOLS = TOOLS.filter((t) => t.ai);
