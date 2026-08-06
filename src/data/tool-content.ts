@@ -15,6 +15,41 @@ export interface ToolContent {
 // actually does. Only mention buttons/uploads/downloads that exist in the UI.
 // -----------------------------------------------------------------------------
 const OVERRIDES: Record<string, Partial<ToolContent>> = {
+  "ai-chat-assistant": {
+    intro:
+      "The AI Chat Assistant is a free AI chat online — ask any question and get an instant, detailed answer. Powered by Google Gemini, it handles code, debugging, SQL, regex, explanations, emails, summaries and study help, with formatted answers and copyable code blocks. No signup, no limits, no history stored.",
+    howTo: [
+      "Type your question in the message box, or tap one of the suggested prompts to start.",
+      "Press Enter to send (Shift+Enter adds a new line for longer, multi-line questions or code).",
+      "Read the answer as it appears — code is shown in a highlighted block with a one-click Copy button.",
+      "Ask follow-up questions; the assistant remembers the conversation so you can refine the answer.",
+      "Click New chat to clear the conversation and start a fresh topic.",
+    ],
+    features: [
+      { title: "Free AI chat online", desc: "Ask unlimited questions with no account, no credit card and no daily cap." },
+      { title: "Gemini AI powered", desc: "Answers come from Google's latest Gemini Flash model for fast, high-quality responses." },
+      { title: "Developer AI chat", desc: "Explain errors, write functions, generate SQL queries and regex, or review snippets." },
+      { title: "Copyable code blocks", desc: "Code is rendered in a monospaced block with a Copy button so you can paste it straight into your editor." },
+      { title: "Conversation memory", desc: "Follow-up questions keep context, so you can iterate instead of re-explaining." },
+      { title: "Private by design", desc: "Chats live only in your browser tab and are never saved to any account or profile." },
+    ],
+    benefits:
+      "A general-purpose AI coding assistant is the fastest way to unblock yourself: paste a stack trace and get a diagnosis, describe a query and get the SQL, or ask for a plain-English explanation of a concept you half-remember. Because the AI Chat Assistant sits alongside 70+ ToolHub Pro utilities, you can go straight from an answer to the tool that finishes the job — format the JSON it produced, compress the image it suggested, or convert the units it mentioned.",
+    faqs: [
+      { q: "Is the AI Chat Assistant really free?", a: "Yes. It is completely free to use with no signup, no credit card and no message limits." },
+      { q: "Which AI model does it use?", a: "It runs on Google's Gemini Flash model, chosen for its speed and strong coding and reasoning ability." },
+      { q: "Can it help with programming?", a: "Yes. It is a capable developer AI chat — ask it to write, explain, refactor or debug code in any popular language, or to generate SQL and regex." },
+      { q: "Are my conversations saved?", a: "No. The chat exists only in the current browser tab. Refresh or click New chat and it is gone." },
+      { q: "Do I need to install anything?", a: "No. It runs in your browser like every other ToolHub Pro tool — nothing to download or install." },
+      { q: "Can it make mistakes?", a: "Yes. Like every AI assistant, it can be confidently wrong. Always verify code, figures and factual claims before relying on them." },
+      { q: "Does it work on mobile?", a: "Yes. The chat layout is fully responsive and works on phones, tablets and desktops." },
+    ],
+    description: [
+      "The AI Chat Assistant brings a full AI chat experience to ToolHub Pro: a single box where you can ask anything and get a structured, readable answer in seconds. It is built for the everyday questions that interrupt real work — why does this function throw, how do I write this query, what is a shorter way to say this in an email, summarise this paragraph.",
+      "Answers are formatted for reading, not just dumped as a wall of text: paragraphs stay short and code arrives in its own block with a copy button. Conversation context is preserved during your session so you can drill into an answer with follow-ups.",
+      "Requests are relayed through a secure server route, so no API key is ever exposed in your browser, and conversations are never stored against an account. Pair it with the JSON Formatter, Password Generator or UUID Generator when the AI hands you data you need to clean up.",
+    ],
+  },
   "age-calculator": {
     intro:
       "The Age Calculator finds your exact age in years, months and days between any two dates. Enter your date of birth and a target date (today by default) and the result updates instantly — no button press, no page reload, no data sent anywhere.",
