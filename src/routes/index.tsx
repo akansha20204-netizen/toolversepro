@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Sparkles, Zap, Shield, Heart } from "lucide-react";
 import * as Icons from "lucide-react";
-import { CATEGORIES, TOOLS, getToolsByCategory, type ToolCategory } from "@/data/tools";
+import { AI_TOOLS, CATEGORIES, TOOLS, getToolsByCategory, type ToolCategory } from "@/data/tools";
 import { ToolCard } from "@/components/site/ToolCard";
 import { BLOG_POSTS } from "@/data/blog";
 import { useState } from "react";
@@ -60,6 +60,7 @@ function Section({
 function Home() {
   const featured = TOOLS.filter((t) => t.featured).slice(0, 8);
   const popular = TOOLS.filter((t) => t.popular).slice(0, 8);
+  const aiTools = AI_TOOLS;
   const trending = TOOLS.filter((t) => t.trending).slice(0, 6);
   const latest = TOOLS.filter((t) => t.latest).slice(0, 6);
   const [email, setEmail] = useState("");
