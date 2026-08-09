@@ -96,6 +96,15 @@ export const TOOLS: ToolMeta[] = [
   { slug: "date-difference-calculator", name: "Date Difference Calculator", category: "calculator", description: "Days, weeks, months between two dates.", icon: "CalendarDays", keywords: ["date"], latest: true },
   { slug: "time-duration-calculator", name: "Time Duration Calculator", category: "calculator", description: "Hours, minutes and seconds between two times.", icon: "Timer", keywords: ["time"], latest: true },
 
+  // Audio/Video Tools (7)
+  { slug: "video-to-mp3", name: "Video to MP3 Converter", category: "media", description: "Extract high-quality MP3 audio from any video — MP4, MOV, MKV, AVI, WebM and more.", icon: "Music", keywords: ["video to mp3", "extract audio", "mp3", "audio extractor", "convert video to audio"], featured: true, popular: true, trending: true, latest: true },
+  { slug: "audio-converter", name: "Audio Converter", category: "media", description: "Convert audio between MP3, WAV, AAC, M4A, FLAC, OGG and WMA with full quality control.", icon: "AudioLines", keywords: ["audio converter", "mp3 converter", "wav", "flac", "aac", "ogg"], trending: true, latest: true },
+  { slug: "mp3-cutter", name: "MP3 Cutter", category: "media", description: "Trim audio precisely with a waveform timeline, fade in/out and instant preview.", icon: "Scissors", keywords: ["mp3 cutter", "audio trimmer", "ringtone maker", "cut audio"], popular: true, latest: true },
+  { slug: "audio-merger", name: "Audio Merger", category: "media", description: "Combine multiple audio files into one track with reordering, silence gaps and crossfade.", icon: "ListMusic", keywords: ["audio merger", "join mp3", "combine audio", "merge songs"], latest: true },
+  { slug: "volume-booster", name: "Volume Booster", category: "media", description: "Increase or reduce audio volume with loudness normalisation and clipping protection.", icon: "Volume2", keywords: ["volume booster", "increase volume", "amplify audio", "louder mp3"], latest: true },
+  { slug: "video-compressor", name: "Video Compressor", category: "media", description: "Shrink video file size with quality presets, resolution options and target file sizes.", icon: "FileVideo", keywords: ["video compressor", "compress video", "reduce video size", "shrink mp4"], featured: true, popular: true, trending: true, latest: true },
+  { slug: "video-converter", name: "Video Converter", category: "media", description: "Convert video between MP4, MOV, MKV, AVI, WebM, M4V, FLV and 3GP without needless quality loss.", icon: "Clapperboard", keywords: ["video converter", "mp4 converter", "convert mkv", "webm", "avi"], trending: true, latest: true },
+
   // Image Tools (15)
   { slug: "image-compressor", name: "Image Compressor", category: "image", description: "Reduce image file size without quality loss.", icon: "Minimize2", keywords: ["compress"], featured: true, popular: true },
   { slug: "image-resizer", name: "Image Resizer", category: "image", description: "Resize images to any width and height.", icon: "Maximize", keywords: ["resize"], popular: true },
