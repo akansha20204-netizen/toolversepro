@@ -1,5 +1,6 @@
 export type ToolCategory =
   | "calculator"
+  | "media"
   | "image"
   | "pdf"
   | "text"
