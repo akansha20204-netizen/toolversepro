@@ -107,7 +107,7 @@ function Home() {
             {q && (
               <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-card text-left shadow-elegant">
                 {results.length ? results.map((t) => (
-                  <Link key={t.slug} to={(t.category === "media" ? "/audio-video-tools/$slug" : "/tools/$slug") as any} params={{ slug: t.slug }} className="flex items-center justify-between px-4 py-3 text-sm hover:bg-muted">
+                  <Link key={t.slug} to={(t.category === "media" ? "/audio-video-tools/$slug" : "/tools/$slug") as any} params={{ slug: t.slug } as any} className="flex items-center justify-between px-4 py-3 text-sm hover:bg-muted">
                     <div><div className="font-medium">{t.name}</div><div className="text-xs text-muted-foreground">{t.description}</div></div>
                     <ArrowRight className="h-4 w-4 text-muted-foreground" />
                   </Link>
