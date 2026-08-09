@@ -34,6 +34,12 @@ export const CATEGORIES: Record<
     icon: "Calculator",
     color: "from-blue-500 to-indigo-600",
   },
+  media: {
+    name: "Audio/Video Tools",
+    description: "Convert, compress, cut & merge audio and video",
+    icon: "Film",
+    color: "from-cyan-500 to-sky-600",
+  },
   image: {
     name: "Image Tools",
     description: "Compress, resize, convert & edit images",
