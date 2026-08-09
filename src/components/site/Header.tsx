@@ -154,6 +154,7 @@ export function Header() {
                   <Link
                     key={r.slug}
                     to={(r.category === "media" ? "/audio-video-tools/$slug" : "/tools/$slug") as any}
+                    params={{ slug: r.slug } as any}
                     params={{ slug: r.slug }}
                     onClick={() => setOpen(false)}
                     className="block rounded-lg px-3 py-2 text-sm hover:bg-muted"
