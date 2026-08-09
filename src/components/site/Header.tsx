@@ -58,8 +58,9 @@ export function Header() {
         <nav className="ml-4 hidden items-center gap-1 md:flex">
           {NAV.map((n) => (
             <Link
-              key={n.to}
-              to={n.to}
+              key={n.label}
+              to={n.to as any}
+              params={n.params as any}
               className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               activeProps={{ className: "text-foreground bg-muted" }}
             >
@@ -137,8 +138,9 @@ export function Header() {
             </div>
             {NAV.map((n) => (
               <Link
-                key={n.to}
-                to={n.to}
+                key={n.label}
+                to={n.to as any}
+                params={n.params as any}
                 onClick={() => setOpen(false)}
                 className="block rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
               >
@@ -151,7 +153,7 @@ export function Header() {
                 .map((r) => (
                   <Link
                     key={r.slug}
-                    to="/tools/$slug"
+                    to={(r.category === "media" ? "/audio-video-tools/$slug" : "/tools/$slug") as any}
                     params={{ slug: r.slug }}
                     onClick={() => setOpen(false)}
                     className="block rounded-lg px-3 py-2 text-sm hover:bg-muted"
