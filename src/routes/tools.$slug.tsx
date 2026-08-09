@@ -1,4 +1,4 @@
-import { createFileRoute, notFound, Link } from "@tanstack/react-router";
+import { createFileRoute, notFound, redirect, Link } from "@tanstack/react-router";
 import { ToolLayout } from "@/components/site/ToolLayout";
 import { getTool } from "@/data/tools";
 import { toolRegistry } from "@/tools";
@@ -8,6 +8,8 @@ export const Route = createFileRoute("/tools/$slug")({
   loader: ({ params }) => {
     const tool = getTool(params.slug);
     if (!tool) throw notFound();
+    // Audio/Video tools live on their own SEO-friendly URLs.
+    if (tool.category === "media") throw redirect({ to: "/audio-video-tools/$slug", params: { slug: tool.slug }, statusCode: 301 });
     return { tool };
   },
   head: ({ loaderData, params }) => {

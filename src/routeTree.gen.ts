@@ -28,6 +28,7 @@ import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as ToolsSlugRouteImport } from './routes/tools.$slug'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
+import { Route as AudioVideoToolsSlugRouteImport } from './routes/audio-video-tools.$slug'
 import { Route as ApiAiChatRouteImport } from './routes/api/ai-chat'
 import { Route as ApiPublicVideoProxyRouteImport } from './routes/api/public/video-proxy'
 
@@ -126,6 +127,11 @@ const BlogSlugRoute = BlogSlugRouteImport.update({
   path: '/blog/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AudioVideoToolsSlugRoute = AudioVideoToolsSlugRouteImport.update({
+  id: '/audio-video-tools/$slug',
+  path: '/audio-video-tools/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAiChatRoute = ApiAiChatRouteImport.update({
   id: '/api/ai-chat',
   path: '/api/ai-chat',
@@ -154,6 +160,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/write-for-us': typeof WriteForUsRoute
   '/api/ai-chat': typeof ApiAiChatRoute
+  '/audio-video-tools/$slug': typeof AudioVideoToolsSlugRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
   '/tools/$slug': typeof ToolsSlugRoute
@@ -177,6 +184,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/write-for-us': typeof WriteForUsRoute
   '/api/ai-chat': typeof ApiAiChatRoute
+  '/audio-video-tools/$slug': typeof AudioVideoToolsSlugRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
   '/tools/$slug': typeof ToolsSlugRoute
@@ -201,6 +209,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/write-for-us': typeof WriteForUsRoute
   '/api/ai-chat': typeof ApiAiChatRoute
+  '/audio-video-tools/$slug': typeof AudioVideoToolsSlugRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
   '/tools/$slug': typeof ToolsSlugRoute
@@ -226,6 +235,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/write-for-us'
     | '/api/ai-chat'
+    | '/audio-video-tools/$slug'
     | '/blog/$slug'
     | '/category/$slug'
     | '/tools/$slug'
@@ -249,6 +259,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/write-for-us'
     | '/api/ai-chat'
+    | '/audio-video-tools/$slug'
     | '/blog/$slug'
     | '/category/$slug'
     | '/tools/$slug'
@@ -272,6 +283,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/write-for-us'
     | '/api/ai-chat'
+    | '/audio-video-tools/$slug'
     | '/blog/$slug'
     | '/category/$slug'
     | '/tools/$slug'
@@ -296,6 +308,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   WriteForUsRoute: typeof WriteForUsRoute
   ApiAiChatRoute: typeof ApiAiChatRoute
+  AudioVideoToolsSlugRoute: typeof AudioVideoToolsSlugRoute
   BlogSlugRoute: typeof BlogSlugRoute
   CategorySlugRoute: typeof CategorySlugRoute
   ToolsSlugRoute: typeof ToolsSlugRoute
@@ -438,6 +451,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/audio-video-tools/$slug': {
+      id: '/audio-video-tools/$slug'
+      path: '/audio-video-tools/$slug'
+      fullPath: '/audio-video-tools/$slug'
+      preLoaderRoute: typeof AudioVideoToolsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/ai-chat': {
       id: '/api/ai-chat'
       path: '/api/ai-chat'
@@ -472,6 +492,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   WriteForUsRoute: WriteForUsRoute,
   ApiAiChatRoute: ApiAiChatRoute,
+  AudioVideoToolsSlugRoute: AudioVideoToolsSlugRoute,
   BlogSlugRoute: BlogSlugRoute,
   CategorySlugRoute: CategorySlugRoute,
   ToolsSlugRoute: ToolsSlugRoute,

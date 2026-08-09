@@ -5,10 +5,13 @@ import { searchTools } from "@/data/tools";
 import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
-const NAV = [
+const NAV: { to: string; label: string; params?: Record<string, string> }[] = [
+  { to: "/", label: "Home" },
+  { to: "/category/$slug", label: "Audio/Video", params: { slug: "media" } },
+];
+const NAV_OLD = [
   { to: "/", label: "Home" },
   { to: "/categories", label: "Categories" },
-  { to: "/category/media", label: "Audio/Video" },
   { to: "/blog", label: "Blog" },
   { to: "/about", label: "About" },
   { to: "/contact", label: "Contact" },
