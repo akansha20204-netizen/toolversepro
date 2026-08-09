@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { to: "/", label: "Home" },
   { to: "/categories", label: "Categories" },
+  { to: "/category/media", label: "Audio/Video" },
   { to: "/blog", label: "Blog" },
   { to: "/about", label: "About" },
   { to: "/contact", label: "Contact" },
@@ -84,7 +85,7 @@ export function Header() {
               {results.map((r) => (
                 <Link
                   key={r.slug}
-                  to="/tools/$slug"
+                  to={r.category === "media" ? "/audio-video-tools/$slug" : "/tools/$slug"}
                   params={{ slug: r.slug }}
                   onClick={() => {
                     setShowSuggest(false);

@@ -22,7 +22,7 @@ export const Route = createFileRoute("/sitemap.xml")({
           { path: "/cookies", changefreq: "yearly", priority: "0.3" },
           { path: "/sitemap", changefreq: "weekly", priority: "0.5" },
           ...Object.keys(CATEGORIES).map((c) => ({ path: `/category/${c}`, changefreq: "weekly", priority: "0.8" })),
-          ...TOOLS.map((t) => ({ path: `/tools/${t.slug}`, changefreq: "weekly", priority: "0.8" })),
+          ...TOOLS.map((t) => ({ path: t.category === "media" ? `/audio-video-tools/${t.slug}` : `/tools/${t.slug}`, changefreq: "weekly", priority: "0.8" })),
           ...BLOG_POSTS.map((p) => ({ path: `/blog/${p.slug}`, changefreq: "monthly", priority: "0.7" })),
         ];
         const urls = entries.map((e) => `  <url>\n    <loc>${BASE_URL}${e.path}</loc>\n    <changefreq>${e.changefreq}</changefreq>\n    <priority>${e.priority}</priority>\n  </url>`).join("\n");

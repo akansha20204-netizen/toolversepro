@@ -8,6 +8,7 @@ import * as I from "./images";
 import * as P from "./pdfs";
 import * as S from "./social";
 import * as AI from "./ai";
+import * as M from "./media";
 
 export const toolRegistry: Record<string, ComponentType> = {
   // Calculators
@@ -26,6 +27,14 @@ export const toolRegistry: Record<string, ComponentType> = {
   "average-calculator": C.AverageCalculator,
   "date-difference-calculator": C.DateDifferenceCalculator,
   "time-duration-calculator": C.TimeDurationCalculator,
+  // Audio/Video
+  "video-to-mp3": M.VideoToMp3,
+  "audio-converter": M.AudioConverter,
+  "mp3-cutter": M.Mp3Cutter,
+  "audio-merger": M.AudioMerger,
+  "volume-booster": M.VolumeBooster,
+  "video-compressor": M.VideoCompressor,
+  "video-converter": M.VideoConverter,
   // Text
   "word-counter": T.WordCounter,
   "character-counter": T.CharacterCounter,
