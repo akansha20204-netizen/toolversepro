@@ -61,6 +61,7 @@ function Home() {
   const featured = TOOLS.filter((t) => t.featured).slice(0, 8);
   const popular = TOOLS.filter((t) => t.popular).slice(0, 8);
   const aiTools = AI_TOOLS;
+  const mediaTools = getToolsByCategory("media");
   const trending = TOOLS.filter((t) => t.trending).slice(0, 6);
   const latest = TOOLS.filter((t) => t.latest).slice(0, 6);
   const [email, setEmail] = useState("");
@@ -106,7 +107,7 @@ function Home() {
             {q && (
               <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-card text-left shadow-elegant">
                 {results.length ? results.map((t) => (
-                  <Link key={t.slug} to="/tools/$slug" params={{ slug: t.slug }} className="flex items-center justify-between px-4 py-3 text-sm hover:bg-muted">
+                  <Link key={t.slug} to={(t.category === "media" ? "/audio-video-tools/$slug" : "/tools/$slug") as any} params={{ slug: t.slug } as any} className="flex items-center justify-between px-4 py-3 text-sm hover:bg-muted">
                     <div><div className="font-medium">{t.name}</div><div className="text-xs text-muted-foreground">{t.description}</div></div>
                     <ArrowRight className="h-4 w-4 text-muted-foreground" />
                   </Link>
@@ -160,6 +161,19 @@ function Home() {
               </Link>
             );
           })}
+        </div>
+      </Section>
+
+      {/* Audio & Video */}
+      <Section
+        title="Audio & Video Tools"
+        subtitle="Convert, compress, cut and merge media right in your browser — powered by FFmpeg, nothing uploaded."
+        action={<Link to="/category/$slug" params={{ slug: "media" }} className="text-sm font-medium text-primary hover:underline">View all →</Link>}
+      >
+        <div className="rounded-3xl border border-border bg-gradient-to-br from-cyan-500/10 via-sky-500/5 to-transparent p-4 sm:p-6">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {mediaTools.map((t) => <ToolCard key={t.slug} tool={t} />)}
+          </div>
         </div>
       </Section>
 

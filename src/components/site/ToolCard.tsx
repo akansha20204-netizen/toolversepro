@@ -8,7 +8,7 @@ export function ToolCard({ tool, compact = false }: { tool: ToolMeta; compact?: 
   const cat = CATEGORIES[tool.category];
   return (
     <Link
-      to="/tools/$slug"
+      to={tool.category === "media" ? "/audio-video-tools/$slug" : "/tools/$slug"}
       params={{ slug: tool.slug }}
       className={cn(
         "group relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-border bg-card p-5 card-hover",

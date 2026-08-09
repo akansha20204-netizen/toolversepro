@@ -5,9 +5,10 @@ import { searchTools } from "@/data/tools";
 import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
-const NAV = [
+const NAV: { to: string; label: string; params?: Record<string, string> }[] = [
   { to: "/", label: "Home" },
   { to: "/categories", label: "Categories" },
+  { to: "/category/$slug", label: "Audio/Video", params: { slug: "media" } },
   { to: "/blog", label: "Blog" },
   { to: "/about", label: "About" },
   { to: "/contact", label: "Contact" },
@@ -57,8 +58,9 @@ export function Header() {
         <nav className="ml-4 hidden items-center gap-1 md:flex">
           {NAV.map((n) => (
             <Link
-              key={n.to}
-              to={n.to}
+              key={n.label}
+              to={n.to as any}
+              params={n.params as any}
               className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               activeProps={{ className: "text-foreground bg-muted" }}
             >
@@ -84,7 +86,7 @@ export function Header() {
               {results.map((r) => (
                 <Link
                   key={r.slug}
-                  to="/tools/$slug"
+                  to={r.category === "media" ? "/audio-video-tools/$slug" : "/tools/$slug"}
                   params={{ slug: r.slug }}
                   onClick={() => {
                     setShowSuggest(false);
@@ -136,8 +138,9 @@ export function Header() {
             </div>
             {NAV.map((n) => (
               <Link
-                key={n.to}
-                to={n.to}
+                key={n.label}
+                to={n.to as any}
+                params={n.params as any}
                 onClick={() => setOpen(false)}
                 className="block rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
               >
@@ -150,8 +153,8 @@ export function Header() {
                 .map((r) => (
                   <Link
                     key={r.slug}
-                    to="/tools/$slug"
-                    params={{ slug: r.slug }}
+                    to={(r.category === "media" ? "/audio-video-tools/$slug" : "/tools/$slug") as any}
+                    params={{ slug: r.slug } as any}
                     onClick={() => setOpen(false)}
                     className="block rounded-lg px-3 py-2 text-sm hover:bg-muted"
                   >
