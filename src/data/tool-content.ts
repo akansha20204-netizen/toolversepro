@@ -607,7 +607,7 @@ function fallbackFeatures(shape: ContentShape, name: string) {
     { title: "Mobile friendly", desc: `Works on phones, tablets and desktops with the same responsive layout.` },
     { title: "No sign-up", desc: `Free forever, with no account, no limits and no watermark.` },
   ];
-  if (shape === "image" || shape === "pdf") {
+  if (shape === "image" || shape === "pdf" || shape === "media") {
     base.push({ title: "Files stay private", desc: `Your file is processed locally and never leaves the browser tab.` });
   }
   if (shape === "social") {
@@ -626,7 +626,10 @@ function fallbackFaqs(shape: ContentShape, name: string) {
     { q: `Does the ${name} work on mobile?`, a: `Yes — the interface is responsive and works on any modern browser on iOS, Android, Windows, macOS or Linux.` },
     { q: `Which browsers are supported?`, a: `Any modern browser: Chrome, Edge, Firefox, Safari, Brave, Opera or Arc.` },
   ];
-  if (shape === "image" || shape === "pdf") {
+  if (shape === "media") {
+    common.unshift({ q: `Are my audio or video files uploaded?`, a: `No. The ${name} uses FFmpeg compiled to WebAssembly, so your media is decoded and re-encoded inside the browser tab. No file ever leaves your device.` });
+    common.unshift({ q: `Is there a file size limit?`, a: `There is no hard limit, but very large files use more memory. On a typical laptop, files up to around 2 GB process comfortably; on phones keep files smaller.` });
+  } else if (shape === "image" || shape === "pdf") {
     common.unshift({ q: `Are my files uploaded to a server?`, a: `No. The ${name} processes your file entirely inside your browser using standard web APIs. Nothing is uploaded.` });
   } else {
     common.unshift({ q: `Is my input sent anywhere?`, a: `No. The ${name} runs entirely in your browser — nothing you enter is transmitted or logged.` });
