@@ -1175,7 +1175,22 @@ export function VideoConverter() {
         // Container change only — zero quality loss, near-instant.
         args.push("-c", "copy");
       } else if (format === "webm") {
-        args.push("-c:v", "libvpx-vp9", "-b:v", vBitrate === "auto" ? "0" : vBitrate, ...(vBitrate === "auto" ? ["-crf", "32"] : []), "-c:a", "libopus", "-b:a", aBitrate);
+        // VP8 + Opus: VP9 encoding inside WebAssembly needs far more memory than a
+        // browser tab can safely allocate and crashes on longer clips.
+        args.push(
+          "-c:v",
+          "libvpx",
+          ...(vBitrate === "auto" ? ["-crf", keepQuality ? "24" : "32", "-b:v", "0"] : ["-b:v", vBitrate]),
+          "-deadline",
+          "realtime",
+          "-cpu-used",
+          "5",
+          "-c:a",
+          "libopus",
+          "-b:a",
+          aBitrate,
+        );
+
       } else if (format === "avi") {
         args.push("-c:v", "mpeg4", "-qscale:v", "4", "-c:a", "libmp3lame", "-b:a", aBitrate);
       } else {
