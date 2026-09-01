@@ -1,28 +1,55 @@
 /**
  * Shared FFmpeg (WebAssembly) client for the Audio/Video Tools category.
  *
- * The UMD builds are loaded from a CDN because they bundle their own worker
- * inline, which is by far the most reliable path in a browser. The instance is
- * a singleton so the ~30 MB core is only fetched once per session.
+ * Architecture notes (important):
+ * - The FFmpeg *class worker* is served from OUR OWN origin (`/ffmpeg/worker.js`,
+ *   copied from the npm package into `public/ffmpeg/`). Browsers refuse to
+ *   construct a Worker from a cross-origin script, which is exactly what the
+ *   previous unpkg-based UMD loader tried to do
+ *   ("Failed to construct 'Worker': Script at https://unpkg.com/... cannot be
+ *   accessed from origin ..."). Same-origin worker => no cross-origin error.
+ * - The ~32 MB ffmpeg core (js + wasm) is fetched over CORS and turned into
+ *   blob URLs, which is allowed and cached by the browser. It cannot be shipped
+ *   as a static asset because it exceeds the hosting per-file asset limit.
+ * - The instance is a singleton so the core is only fetched once per session.
  */
 
-const CORE_VER = "0.12.6";
-const FF_VER = "0.12.10";
-const UTIL_VER = "0.12.1";
+import { FFmpeg } from "@ffmpeg/ffmpeg";
+
+const CORE_VER = "0.12.10";
+const CORE_CDNS = [
+  `https://cdn.jsdelivr.net/npm/@ffmpeg/core@${CORE_VER}/dist/esm`,
+  `https://unpkg.com/@ffmpeg/core@${CORE_VER}/dist/esm`,
+];
 
 let instance: any = null;
 let loading: Promise<any> | null = null;
+let cached: { coreURL: string; wasmURL: string } | null = null;
 
-function loadScript(src: string) {
-  return new Promise<void>((resolve, reject) => {
-    if (document.querySelector(`script[data-src="${src}"]`)) return resolve();
-    const s = document.createElement("script");
-    s.src = src;
-    s.dataset.src = src;
-    s.onload = () => resolve();
-    s.onerror = () => reject(new Error(`Failed to load ${src}`));
-    document.head.appendChild(s);
-  });
+async function toBlobURL(url: string, type: string) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to fetch ${url} (${res.status})`);
+  const buf = await res.arrayBuffer();
+  return URL.createObjectURL(new Blob([buf], { type }));
+}
+
+async function fetchCore(onStatus?: (m: string) => void) {
+  if (cached) return cached;
+  let lastErr: unknown = null;
+  for (const base of CORE_CDNS) {
+    try {
+      onStatus?.("Loading the media engine (first run only, ~32 MB)…");
+      const coreURL = await toBlobURL(`${base}/ffmpeg-core.js`, "text/javascript");
+      const wasmURL = await toBlobURL(`${base}/ffmpeg-core.wasm`, "application/wasm");
+      cached = { coreURL, wasmURL };
+      return cached;
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw new Error(
+    `Could not download the media engine. Check your connection or any content blocker. (${String(lastErr)})`,
+  );
 }
 
 export async function getFFmpeg(onStatus?: (m: string) => void): Promise<any> {
@@ -30,20 +57,14 @@ export async function getFFmpeg(onStatus?: (m: string) => void): Promise<any> {
   if (loading) return loading;
 
   loading = (async () => {
-    onStatus?.("Loading the media engine (first run only, ~30 MB)…");
-    await loadScript(`https://unpkg.com/@ffmpeg/util@${UTIL_VER}/dist/umd/index.js`);
-    await loadScript(`https://unpkg.com/@ffmpeg/ffmpeg@${FF_VER}/dist/umd/ffmpeg.js`);
-
-    const w = window as any;
-    const FFmpegCtor = w.FFmpegWASM?.FFmpeg;
-    const toBlobURL = w.FFmpegUtil?.toBlobURL;
-    if (!FFmpegCtor || !toBlobURL) throw new Error("Could not initialise the media engine (CDN blocked?).");
-
-    const baseURL = `https://unpkg.com/@ffmpeg/core@${CORE_VER}/dist/umd`;
-    const ff = new FFmpegCtor();
+    const { coreURL, wasmURL } = await fetchCore(onStatus);
+    onStatus?.("Starting the media engine…");
+    const ff: any = new FFmpeg();
     await ff.load({
-      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
-      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
+      // Same-origin worker script — never a CDN URL.
+      classWorkerURL: new URL("/ffmpeg/worker.js", window.location.origin).href,
+      coreURL,
+      wasmURL,
     });
     instance = ff;
     return ff;
@@ -51,10 +72,14 @@ export async function getFFmpeg(onStatus?: (m: string) => void): Promise<any> {
 
   try {
     return await loading;
+  } catch (e) {
+    instance = null;
+    throw e;
   } finally {
     loading = null;
   }
 }
+
 
 /** Hard-stops any running job and drops the instance (used by Cancel). */
 export function terminateFFmpeg() {

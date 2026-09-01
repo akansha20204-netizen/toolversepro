@@ -563,40 +563,13 @@ export function VideoDownloader() {
 
   const loadFFmpeg = async () => {
     if (ffmpegRef.current) return ffmpegRef.current;
-    setMsg("Loading MP4 converter (first run may take a moment)…");
-    const CORE_VER = "0.12.6";
-    const FF_VER = "0.12.10";
-    const UTIL_VER = "0.12.1";
-
-    const loadScript = (src: string) =>
-      new Promise<void>((resolve, reject) => {
-        if (document.querySelector(`script[data-src="${src}"]`)) return resolve();
-        const s = document.createElement("script");
-        s.src = src;
-        s.dataset.src = src;
-        s.onload = () => resolve();
-        s.onerror = () => reject(new Error(`Failed to load ${src}`));
-        document.head.appendChild(s);
-      });
-
-    // UMD builds bundle their own worker inline — most reliable path in a browser.
-    await loadScript(`https://unpkg.com/@ffmpeg/util@${UTIL_VER}/dist/umd/index.js`);
-    await loadScript(`https://unpkg.com/@ffmpeg/ffmpeg@${FF_VER}/dist/umd/ffmpeg.js`);
-
-    const w = window as any;
-    const FFmpeg = w.FFmpegWASM?.FFmpeg;
-    const toBlobURL = w.FFmpegUtil?.toBlobURL;
-    if (!FFmpeg || !toBlobURL) throw new Error("Failed to initialise FFmpeg (CDN blocked?).");
-
-    const baseURL = `https://unpkg.com/@ffmpeg/core@${CORE_VER}/dist/umd`;
-    const ff = new FFmpeg();
-    await ff.load({
-      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
-      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
-    });
+    const { getFFmpeg } = await import("@/lib/ffmpeg-client");
+    // Same-origin worker + CORS-fetched core (no cross-origin Worker construction).
+    const ff = await getFFmpeg((m) => setMsg(m));
     ffmpegRef.current = ff;
     return ff;
   };
+
 
 
   const remuxTsToMp4 = async (tsBytes: Uint8Array): Promise<Uint8Array> => {
