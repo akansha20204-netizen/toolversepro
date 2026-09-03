@@ -124,6 +124,7 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="en">
       <head>
         <HeadContent />
+        <meta name="monetag" content="264cdb5eb734b20daa1766f603a94fe2" />
         <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1647568671578268"
