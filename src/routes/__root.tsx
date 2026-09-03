@@ -126,6 +126,12 @@ function RootShell({ children }: { children: ReactNode }) {
         <HeadContent />
         <meta name="monetag" content="264cdb5eb734b20daa1766f603a94fe2" />
         <script
+          src="https://quge5.com/88/tag.min.js"
+          data-zone="275945"
+          async
+          data-cfasync="false"
+        />
+        <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1647568671578268"
           crossOrigin="anonymous"
