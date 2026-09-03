@@ -132,6 +132,12 @@ function RootShell({ children }: { children: ReactNode }) {
           data-cfasync="false"
         />
         <script
+          src="https://quge5.com/88/tag.min.js"
+          data-zone="275947"
+          async
+          data-cfasync="false"
+        />
+        <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1647568671578268"
           crossOrigin="anonymous"
