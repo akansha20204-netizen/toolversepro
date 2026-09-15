@@ -1,0 +1,29 @@
+# Render blueprint for the ToolHub Pro yt-dlp API.
+# Deploy: Render Dashboard -> New -> Blueprint -> pick this repo.
+# (Set "Root Directory" to `backend` if you create the service manually.)
+services:
+  - type: web
+    name: toolhub-ytdlp-api
+    runtime: docker
+    plan: starter            # free plan works, but sleeps and has less CPU/RAM
+    region: oregon
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      # Comma-separated list of allowed browser origins (no trailing slash).
+      - key: FRONTEND_URL
+        value: https://toolsforuse.online,https://www.toolsforuse.online
+      # Hard ceiling for a generated file, in megabytes.
+      - key: MAX_FILESIZE_MB
+        value: "600"
+      # Seconds a single yt-dlp job may run before it is killed.
+      - key: DOWNLOAD_TIMEOUT
+        value: "600"
+      # Simultaneous downloads allowed on this instance.
+      - key: MAX_CONCURRENT_DOWNLOADS
+        value: "2"
+      # Requests per client IP per minute.
+      - key: RATE_LIMIT_PER_MINUTE
+        value: "12"
