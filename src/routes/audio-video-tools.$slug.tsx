@@ -15,8 +15,15 @@ export const Route = createFileRoute("/audio-video-tools/$slug")({
   head: ({ loaderData, params }) => {
     if (!loaderData) return { meta: [{ title: "Tool not found" }, { name: "robots", content: "noindex" }] };
     const t = loaderData.tool;
-    const title = `${t.name} — Free Online Audio & Video Tool | ToolHub Pro`;
-    const desc = t.description;
+    const SEO_OVERRIDES: Record<string, { title: string; desc: string }> = {
+      "youtube-video-downloader": {
+        title: "YouTube Video Downloader - Download YouTube Videos & Shorts",
+        desc: "Download YouTube videos and Shorts in available qualities with our fast and easy YouTube video downloader.",
+      },
+    };
+    const seo = SEO_OVERRIDES[params.slug];
+    const title = seo?.title ?? `${t.name} — Free Online Audio & Video Tool | ToolHub Pro`;
+    const desc = seo?.desc ?? t.description;
     const url = `${BASE}/audio-video-tools/${params.slug}`;
     const content = generateToolContent(t);
     return {

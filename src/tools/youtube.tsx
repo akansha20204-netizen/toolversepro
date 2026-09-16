@@ -119,6 +119,8 @@ function friendlyError(code: string | undefined, status?: number): string {
       return "That does not look like a YouTube video link. Paste a normal watch, Shorts or youtu.be link.";
     case "unsupported_url":
       return "Only single YouTube videos and Shorts are supported — playlists and other sites are not.";
+    case "invalid_quality":
+      return "That quality is not available for this video. Pick another option from the list.";
     case "unavailable":
       return "This video is unavailable. It may have been removed or made private by the owner.";
     case "private":

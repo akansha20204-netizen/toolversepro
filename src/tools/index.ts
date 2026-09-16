@@ -9,6 +9,7 @@ import * as P from "./pdfs";
 import * as S from "./social";
 import * as AI from "./ai";
 import * as M from "./media";
+import * as YT from "./youtube";
 
 export const toolRegistry: Record<string, ComponentType> = {
   // Calculators
@@ -35,6 +36,7 @@ export const toolRegistry: Record<string, ComponentType> = {
   "volume-booster": M.VolumeBooster,
   "video-compressor": M.VideoCompressor,
   "video-converter": M.VideoConverter,
+  "youtube-video-downloader": YT.YouTubeVideoDownloader,
   // Text
   "word-counter": T.WordCounter,
   "character-counter": T.CharacterCounter,

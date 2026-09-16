@@ -519,7 +519,44 @@ const OVERRIDES: Record<string, Partial<ToolContent>> = {
       "See also our JSON to CSV Converter and PDF Merger for other browser-only file utilities.",
     ],
   },
+
+  "youtube-video-downloader": {
+    intro:
+      "The YouTube Video Downloader saves a YouTube video or Short as an MP4 file, or as an MP3 when you only want the audio. Paste the link, press Get Video, pick the quality that is actually available for that video, and press Download. The heavy work — fetching the streams and merging separate video and audio tracks into one playable MP4 with FFmpeg — happens on our download server, so nothing depends on your browser's memory.",
+    howTo: [
+      "Copy the link of the YouTube video or Short you want to save.",
+      "Paste it into the input field. Normal watch links, Shorts links, embed links and youtu.be short links all work.",
+      "Press Get Video. The thumbnail, title, channel, duration and available qualities appear.",
+      "Choose a quality — Best, 4K, 1440p, 1080p, 720p, 480p, 360p or Audio Only. Only qualities the video actually offers are listed.",
+      "Press Download and watch the progress bar. The finished MP4 or MP3 saves to your device.",
+    ],
+    features: [
+      { title: "Shorts and normal videos", desc: "Handles youtube.com/watch, youtube.com/shorts, embed, live and youtu.be links." },
+      { title: "Real quality list", desc: "Quality options are read from the video itself, so you never pick a resolution that does not exist." },
+      { title: "Single playable MP4", desc: "When YouTube serves video and audio separately, they are merged into one MP4 with FFmpeg before the download starts." },
+      { title: "Audio only (MP3)", desc: "Grab just the soundtrack as a 192 kbps MP3 when you only need audio." },
+      { title: "Honest progress", desc: "Real transferred size, speed and remaining time — no fake animated percentages." },
+      { title: "Nothing kept", desc: "The generated file lives in a temporary folder and is deleted the moment your download finishes." },
+    ],
+    benefits:
+      "For your own uploads, licensed footage, or clips you have permission to reuse, downloading through the browser beats installing desktop software or trusting a pop-up-riddled site. You get a proper MP4 that plays anywhere, an MP3 option for audio, and a clear quality list instead of guesswork.",
+    faqs: [
+      { q: "Does this work for YouTube Shorts?", a: "Yes. Paste a youtube.com/shorts/... link exactly as you copied it — Shorts are downloaded the same way as regular videos." },
+      { q: "Why are some qualities missing?", a: "The list is built from the formats YouTube actually publishes for that video. If a clip was only uploaded in 720p, no 1080p or 4K option can appear." },
+      { q: "Is the file processed on a server?", a: "Yes. Unlike our other audio and video tools, this one needs a server because YouTube streams cannot be fetched directly from a browser tab. The file is generated, sent to you, then deleted." },
+      { q: "Can I download private or age-restricted videos?", a: "No. Private, members-only, deleted and age-restricted videos are rejected, and no attempt is made to bypass those restrictions." },
+      { q: "Why did a 4K download take so long?", a: "High-resolution videos are large, and separate video and audio tracks must be merged before the download can start. Lower resolutions finish much faster." },
+      { q: "Am I allowed to download any video?", a: "Only content you own or have permission to use. Downloading other people's videos may breach YouTube's Terms of Service and copyright law — please check before you save." },
+    ],
+    description: [
+      "The YouTube Video Downloader is the one tool in the Audio & Video suite that talks to a server, and for a good reason: YouTube does not expose a plain file URL a browser can fetch. Instead, a request goes to our download service, which resolves the available streams, picks the MP4-compatible video and audio tracks for the quality you chose, merges them with FFmpeg, and streams the finished file straight back to your browser.",
+      "Quality selection is deliberately built from the real format list rather than a fixed menu. That avoids the most common frustration with downloaders — choosing 1080p and silently receiving 360p. If a resolution is listed here, that resolution exists.",
+      "Audio Only produces a 192 kbps MP3, which is the right choice for podcasts, interviews and lectures where the picture adds nothing. For everything else, the MP4 output plays in any player, on any phone, without conversion.",
+      "Temporary files are removed as soon as your download completes, and nothing about the video is stored afterwards. See also our Video to MP3 Converter, Video Compressor and Video Converter for editing files you already have on your device.",
+    ],
+  },
 };
+
 
 // -----------------------------------------------------------------------------
 // Category-aware fallback content — used for tools without a hand-written
