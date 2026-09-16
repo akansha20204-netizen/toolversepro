@@ -163,7 +163,7 @@ def summarise_formats(info: dict[str, Any]) -> list[dict[str, Any]]:
     return out
 
 
-_ERROR_PATTERNS: tuple[tuple[str, str], tuple[str, str], ...] = (
+_ERROR_PATTERNS: tuple[tuple[str, str], ...] = (
     ("private video", "private"),
     ("sign in to confirm your age", "age_restricted"),
     ("age-restricted", "age_restricted"),
