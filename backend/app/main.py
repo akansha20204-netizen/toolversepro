@@ -233,7 +233,7 @@ async def info(request: Request, body: InfoRequest) -> JSONResponse:
             "thumbnail": thumb,
             "duration": int(data["duration"]) if isinstance(data.get("duration"), (int, float)) else None,
             "uploader": data.get("uploader") or data.get("channel"),
-            "formats": summarise_formats(data),
+            "formats": formats,
         }
     )
 
