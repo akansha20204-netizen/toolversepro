@@ -7,9 +7,9 @@
  *
  * SETUP AFTER DEPLOYING THE BACKEND:
  *   1. Deploy `backend/` to Render (see backend/README.md).
- *   2. Copy the Render service URL, e.g. https://my-ytdlp-api.onrender.com
+ *   2. Copy the Render service URL, e.g. https://yt-dlp-li0a.onrender.com
  *   3. Set the frontend environment variable:
- *        VITE_YTDLP_API_URL=https://my-ytdlp-api.onrender.com
+ *        VITE_YTDLP_API_URL=https://yt-dlp-li0a.onrender.com
  *      (no trailing slash)
  *   4. Redeploy / publish the frontend.
  *
