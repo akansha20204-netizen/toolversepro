@@ -64,6 +64,22 @@ CPU/RAM, which makes 1080p+ merges slow or prone to timeouts.
 All are optional; the defaults above apply when unset. Localhost origins are
 always allowed for development.
 
+### Getting past YouTube's "confirm you're not a bot" check
+
+YouTube challenges requests from datacenter IP ranges, and Render runs in a
+datacenter. When that happens the API returns `{"code":"bot_check"}` and the
+tool tells the user to try again later. Two supported ways to fix it:
+
+| Variable | Value | Notes |
+| --- | --- | --- |
+| `YTDLP_COOKIES` | contents of a `cookies.txt` file | Export cookies for `youtube.com` from a signed-in browser (Netscape format) and paste the whole file as the value. Written to a temp file at startup. |
+| `YTDLP_COOKIEFILE` | path to a `cookies.txt` | Alternative if you mount the file yourself. |
+| `YTDLP_PROXY` | `http://user:pass@host:port` | Route requests through a residential/mobile proxy. |
+| `YTDLP_PLAYER_CLIENTS` | `default,web_safari,mweb,tv` | Advanced: which YouTube clients yt-dlp tries, in order. |
+
+Use a throwaway Google account for cookies, never your main one, and refresh
+them when downloads start failing again.
+
 ## Frontend environment variable
 
 Set this on the frontend (Lovable / your host), no trailing slash:
