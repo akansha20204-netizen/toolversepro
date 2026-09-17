@@ -24,7 +24,9 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { Download, Loader2, Search, Youtube, AlertTriangle, ShieldAlert, X } from "lucide-react";
 import { Field, TButton, TInput, TSelect, Stat, ResultBox } from "@/components/site/tool-ui";
 
-const API_BASE = (import.meta.env["https://yt-dlp-li0a.onrender.com"] as string | undefined)?.replace(/\/+$/, "") ?? "";
+const response = await fetch(
+  `${API_BASE_URL}/YOUR_API_ENDPOINT`
+); as string | undefined)?.replace(/\/+$/, "") ?? "";
 
 /* ------------------------------- types ---------------------------------- */
 
