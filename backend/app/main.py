@@ -214,6 +214,13 @@ async def info(request: Request, body: InfoRequest) -> JSONResponse:
     if data.get("is_live"):
         return _error("unavailable", 422)
 
+    formats = summarise_formats(data)
+    if not formats:
+        # Metadata came through but no real streams: YouTube is challenging
+        # this server's IP. Cookies (YTDLP_COOKIES) or a proxy fix this.
+        log.warning("no playable formats id=%s (likely bot check)", parsed.video_id)
+        return _error("bot_check", 422)
+
     thumb = data.get("thumbnail")
     if not thumb:
         thumbs = data.get("thumbnails") or []
