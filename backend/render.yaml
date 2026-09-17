@@ -27,3 +27,11 @@ services:
       # Requests per client IP per minute.
       - key: RATE_LIMIT_PER_MINUTE
         value: "12"
+      # Optional — only needed if YouTube starts challenging the server IP.
+      # Paste the contents of a Netscape cookies.txt exported from a signed-in
+      # (throwaway) YouTube account, or leave unset.
+      - key: YTDLP_COOKIES
+        sync: false
+      # Optional residential/mobile proxy, e.g. http://user:pass@host:port
+      - key: YTDLP_PROXY
+        sync: false

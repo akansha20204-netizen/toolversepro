@@ -1,4 +1,6 @@
 fastapi==0.115.6
 uvicorn[standard]==0.34.0
-yt-dlp==2025.9.5
 pydantic==2.10.4
+# Intentionally unpinned: YouTube changes often and only the newest yt-dlp
+# keeps working. Rebuild the Render image (clear build cache) to refresh it.
+yt-dlp

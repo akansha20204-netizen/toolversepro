@@ -121,6 +121,8 @@ function friendlyError(code: string | undefined, status?: number): string {
       return "Only single YouTube videos and Shorts are supported — playlists and other sites are not.";
     case "invalid_quality":
       return "That quality is not available for this video. Pick another option from the list.";
+    case "bot_check":
+      return "YouTube is currently asking the download server to verify itself, so this video cannot be fetched. Try again shortly — if it keeps happening, add YouTube cookies to your download server.";
     case "unavailable":
       return "This video is unavailable. It may have been removed or made private by the owner.";
     case "private":
