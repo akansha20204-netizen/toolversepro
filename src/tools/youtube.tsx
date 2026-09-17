@@ -14,9 +14,9 @@
  *   4. Redeploy / publish the frontend.
  *
  * The tool then calls:
- *   GET  ${VITE_YTDLP_API_URL}/health
- *   POST ${VITE_YTDLP_API_URL}/info
- *   POST ${VITE_YTDLP_API_URL}/download
+ *   GET  ${https://yt-dlp-li0a.onrender.com}/health
+ *   POST ${https://yt-dlp-li0a.onrender.com}/info
+ *   POST ${https://yt-dlp-li0a.onrender.com}/download
  *
  * No yt-dlp ever runs in the browser.
  */
@@ -24,7 +24,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { Download, Loader2, Search, Youtube, AlertTriangle, ShieldAlert, X } from "lucide-react";
 import { Field, TButton, TInput, TSelect, Stat, ResultBox } from "@/components/site/tool-ui";
 
-const API_BASE = (import.meta.env["VITE_YTDLP_API_URL"] as string | undefined)?.replace(/\/+$/, "") ?? "";
+const API_BASE = (import.meta.env["https://yt-dlp-li0a.onrender.com"] as string | undefined)?.replace(/\/+$/, "") ?? "";
 
 /* ------------------------------- types ---------------------------------- */
 
