@@ -126,6 +126,38 @@ class DownloadRequest(BaseModel):
     type: Literal["video", "audio"] = "video"
 
 
+def _cookie_file() -> str | None:
+    """Optional YouTube cookies (Netscape cookies.txt format).
+
+    Datacenter IPs — including Render's — are frequently challenged by
+    YouTube's "confirm you're not a bot" check. Supplying cookies exported
+    from a signed-in browser session is the supported way around that.
+    Provide them either as file contents in YTDLP_COOKIES, or as a path in
+    YTDLP_COOKIEFILE.
+    """
+    path = os.environ.get("YTDLP_COOKIEFILE", "").strip()
+    if path and Path(path).is_file():
+        return path
+    contents = os.environ.get("YTDLP_COOKIES", "")
+    if "\t" not in contents:
+        return None
+    target = Path(tempfile.gettempdir()) / "yt-cookies.txt"
+    try:
+        target.write_text(contents if contents.endswith("\n") else contents + "\n", encoding="utf-8")
+        return str(target)
+    except OSError:
+        log.warning("could not write cookie file")
+        return None
+
+
+COOKIE_FILE = _cookie_file()
+PROXY_URL = os.environ.get("YTDLP_PROXY", "").strip() or None
+PLAYER_CLIENTS = [
+    c.strip()
+    for c in (os.environ.get("YTDLP_PLAYER_CLIENTS", "default,web_safari,mweb,tv").split(","))
+    if c.strip()
+]
+
 BASE_OPTS: dict[str, Any] = {
     "quiet": True,
     "no_warnings": True,
@@ -141,7 +173,12 @@ BASE_OPTS: dict[str, Any] = {
     "restrictfilenames": True,
     "consoletitle": False,
     "call_home": False,
+    "extractor_args": {"youtube": {"player_client": PLAYER_CLIENTS}},
 }
+if COOKIE_FILE:
+    BASE_OPTS["cookiefile"] = COOKIE_FILE
+if PROXY_URL:
+    BASE_OPTS["proxy"] = PROXY_URL
 
 
 @app.get("/health")
@@ -158,7 +195,8 @@ async def info(request: Request, body: InfoRequest) -> JSONResponse:
         return _error(exc.code, exc.status)
 
     def extract() -> dict[str, Any]:
-        with YoutubeDL({**BASE_OPTS, "skip_download": True}) as ydl:
+        opts = {**BASE_OPTS, "skip_download": True, "ignore_no_formats_error": True}
+        with YoutubeDL(opts) as ydl:
             return ydl.extract_info(parsed.canonical, download=False) or {}
 
     try:
