@@ -1,30 +1,25 @@
 /**
  * YouTube Video Downloader — front end only.
  *
- * This tool talks to YOUR OWN yt-dlp REST API (FastAPI + yt-dlp + FFmpeg),
- * which lives in the `backend/` folder of this repository and is meant to be
- * deployed to Render as a Docker Web Service.
+ * Talks to the self-hosted yt-dlp REST API (FastAPI + yt-dlp + FFmpeg) that
+ * lives in the `backend/` folder of this repository and is deployed to Render.
+ * The base URL lives in a single place: src/config/ytdlp.ts
+ * (override with VITE_YTDLP_API_URL).
  *
- * SETUP AFTER DEPLOYING THE BACKEND:
- *   1. Deploy `backend/` to Render (see backend/README.md).
- *   2. Copy the Render service URL, e.g. https://my-ytdlp-api.onrender.com
- *   3. Set the frontend environment variable:
- *        VITE_YTDLP_API_URL=https://my-ytdlp-api.onrender.com
- *      (no trailing slash)
- *   4. Redeploy / publish the frontend.
+ * Endpoints used:
+ *   GET  /health            cold-start / availability probe
+ *   POST /info              metadata (+ formats when the backend returns them)
+ *   POST /download          the media file, or an async job envelope
+ *   GET  /status/{job_id}   polled only when the backend answers with a job
  *
- * The tool then calls:
- *   GET  ${VITE_YTDLP_API_URL}/health
- *   POST ${VITE_YTDLP_API_URL}/info
- *   POST ${VITE_YTDLP_API_URL}/download
- *
- * No yt-dlp ever runs in the browser.
+ * No yt-dlp ever runs in the browser and no mock responses exist here.
  */
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Download, Loader2, Search, Youtube, AlertTriangle, ShieldAlert, X } from "lucide-react";
 import { Field, TButton, TInput, TSelect, Stat, ResultBox } from "@/components/site/tool-ui";
+import { YT_DLP_API_BASE_URL, apiUrl, devLog, waitForApi } from "@/config/ytdlp";
 
-const API_BASE = (import.meta.env["VITE_YTDLP_API_URL"] as string | undefined)?.replace(/\/+$/, "") ?? "";
+const API_BASE = YT_DLP_API_BASE_URL;
 
 /* ------------------------------- types ---------------------------------- */
 
