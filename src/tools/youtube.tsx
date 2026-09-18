@@ -664,11 +664,23 @@ export function YouTubeVideoDownloader() {
           )}
 
           {phase === "done" && (
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-background p-4 text-sm">
-              <span className="font-medium">Download completed — check your downloads folder.</span>
-              <TButton variant="outline" onClick={reset}>
-                New video
-              </TButton>
+            <div className="flex flex-col gap-3 rounded-xl border border-border bg-background p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <p className="font-medium">Ready — saved to your downloads folder.</p>
+                {fileName && <p className="truncate text-xs text-muted-foreground">{fileName}</p>}
+              </div>
+              <div className="flex shrink-0 gap-2">
+                {fileUrl && (
+                  <TButton asChild>
+                    <a href={fileUrl} download={fileName || undefined}>
+                      <Download className="h-4 w-4" /> Download File
+                    </a>
+                  </TButton>
+                )}
+                <TButton variant="outline" onClick={reset}>
+                  New video
+                </TButton>
+              </div>
             </div>
           )}
         </ResultBox>
