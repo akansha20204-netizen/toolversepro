@@ -158,34 +158,38 @@ type Choice = {
   note?: string;
 };
 
+const LADDER = [2160, 1440, 1080, 720, 480, 360, 240, 144];
+
 function buildChoices(info: ApiInfo): Choice[] {
   const out: Choice[] = [{ key: "best", label: "Best Quality (MP4)", type: "video", quality: "best" }];
 
-  const heights = Array.from(
-    new Set(
-      info.formats
-        .filter((f) => f.height && f.vcodec !== "none")
-        .map((f) => f.height as number),
-    ),
-  ).sort((a, b) => b - a);
+  const videoFormats = info.formats.filter((f) => f.height && f.vcodec !== "none");
 
-  const LADDER = [2160, 1440, 1080, 720, 480, 360, 240, 144];
-  for (const h of LADDER) {
-    if (!heights.some((available) => available === h)) continue;
-    const best = info.formats
-      .filter((f) => f.height === h && f.vcodec !== "none")
-      .sort((a, b) => (b.filesize ?? 0) - (a.filesize ?? 0))[0];
-    out.push({
-      key: `v${h}`,
-      label: `${h}p${h === 2160 ? " / 4K" : ""} MP4`,
-      type: "video",
-      quality: `${h}p`,
-      note: fmtBytes(best?.filesize),
-    });
+  if (videoFormats.length > 0) {
+    // The backend told us exactly which streams exist — show only those.
+    for (const h of LADDER) {
+      const matching = videoFormats.filter((f) => f.height === h);
+      if (matching.length === 0) continue;
+      const best = matching.sort((a, b) => (b.filesize ?? 0) - (a.filesize ?? 0))[0];
+      out.push({
+        key: `v${h}`,
+        label: `${h}p${h === 2160 ? " / 4K" : ""} MP4`,
+        type: "video",
+        quality: `${h}p`,
+        note: fmtBytes(best?.filesize),
+      });
+    }
+  } else {
+    // Metadata-only backend response (no format list). Offer the standard
+    // ladder the API accepts; it picks the closest available stream and
+    // reports back if a quality truly is not there.
+    for (const h of [1080, 720, 480, 360]) {
+      out.push({ key: `v${h}`, label: `${h}p MP4`, type: "video", quality: `${h}p` });
+    }
   }
 
-  if (info.formats.some((f) => f.has_audio)) {
-    out.push({ key: "audio", label: "Audio Only (MP3)", type: "audio", quality: "audio" });
+  if (videoFormats.length === 0 || info.formats.some((f) => f.has_audio)) {
+    out.push({ key: "audio", label: "Audio Only (MP3, 192 kbps)", type: "audio", quality: "audio" });
   }
   return out;
 }
@@ -233,20 +237,36 @@ export function YouTubeVideoDownloader() {
     setError("");
     setInfo(null);
     setPhase("fetching");
+    setWaking(false);
     const ctrl = new AbortController();
     abortRef.current = ctrl;
-    const timer = setTimeout(() => ctrl.abort(), 60_000);
+    const timer = setTimeout(() => ctrl.abort(), 120_000);
     try {
-      const res = await fetch(`${API_BASE}/info`, {
+      const up = await waitForApi(4, () => setWaking(true), ctrl.signal);
+      setWaking(false);
+      if (!up) {
+        setPhase("error");
+        setError("The download server is not responding right now. It may still be waking up — please try again in a minute.");
+        return;
+      }
+      devLog("POST /info", parsed.id);
+      const res = await fetch(apiUrl("/info"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: parsed.url }),
         signal: ctrl.signal,
       });
-      const data = (await res.json().catch(() => ({}))) as Partial<ApiInfo> & { detail?: { code?: string }; code?: string };
-      if (!res.ok) {
+      const data = (await res.json().catch(() => ({}))) as Partial<ApiInfo> & {
+        detail?: { code?: string } | string;
+        code?: string;
+        error?: string;
+        success?: boolean;
+      };
+      devLog("POST /info ->", res.status, data.success);
+      if (!res.ok || data.success === false) {
         setPhase("error");
-        setError(friendlyError(data.code ?? data.detail?.code, res.status));
+        const code = data.code ?? (typeof data.detail === "object" ? data.detail?.code : undefined);
+        setError(friendlyError(code, res.status));
         return;
       }
       const normalised: ApiInfo = {
@@ -267,45 +287,15 @@ export function YouTubeVideoDownloader() {
           : "Could not reach the download service. Please check your connection and try again.",
       );
     } finally {
+      setWaking(false);
       clearTimeout(timer);
       abortRef.current = null;
     }
   }, [url, configured]);
 
-  const startDownload = useCallback(async () => {
-    const parsed = parseYouTubeUrl(url);
-    if (!parsed.ok || !choice || !info) return;
-    setError("");
-    setReceived(0);
-    setTotal(0);
-    setSpeed(0);
-    setEta(0);
-    setPhase("preparing");
-
-    const ctrl = new AbortController();
-    abortRef.current = ctrl;
-    const timeout = setTimeout(() => ctrl.abort(), 20 * 60_000);
-
-    try {
-      const res = await fetch(`${API_BASE}/download`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          url: parsed.url,
-          quality: choice.quality,
-          format_id: choice.format_id ?? null,
-          type: choice.type,
-        }),
-        signal: ctrl.signal,
-      });
-
-      if (!res.ok) {
-        const data = (await res.json().catch(() => ({}))) as { code?: string; detail?: { code?: string } };
-        setPhase("error");
-        setError(friendlyError(data.code ?? data.detail?.code, res.status));
-        return;
-      }
-
+  /** Streams a media response to the user's disk. */
+  const saveResponse = useCallback(
+    async (res: Response, kind: "video" | "audio", title: string) => {
       const len = Number(res.headers.get("Content-Length") ?? 0);
       setTotal(Number.isFinite(len) ? len : 0);
       setPhase("downloading");
@@ -339,24 +329,116 @@ export function YouTubeVideoDownloader() {
       }
 
       setPhase("processing");
-      const type = choice.type === "audio" ? "audio/mpeg" : "video/mp4";
+      const type = kind === "audio" ? "audio/mpeg" : "video/mp4";
       const blob = new Blob(chunks as BlobPart[], { type });
       const disposition = res.headers.get("Content-Disposition") ?? "";
       const match = /filename\*?=(?:UTF-8''|")?([^";]+)/i.exec(disposition);
-      const fallbackName = `${info.title.replace(/[^\w\s.-]+/g, "").trim().slice(0, 80) || "youtube-video"}.${
-        choice.type === "audio" ? "mp3" : "mp4"
+      const fallbackName = `${title.replace(/[^\w\s.-]+/g, "").trim().slice(0, 80) || "youtube-video"}.${
+        kind === "audio" ? "mp3" : "mp4"
       }`;
       const name = match?.[1] ? decodeURIComponent(match[1]) : fallbackName;
 
       const objectUrl = URL.createObjectURL(blob);
+      setFileUrl(objectUrl);
+      setFileName(name);
       const a = document.createElement("a");
       a.href = objectUrl;
       a.download = name;
       document.body.appendChild(a);
       a.click();
       a.remove();
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
       setPhase("done");
+    },
+    [],
+  );
+
+  const startDownload = useCallback(async () => {
+    const parsed = parseYouTubeUrl(url);
+    if (!parsed.ok || !choice || !info) return;
+    setError("");
+    setReceived(0);
+    setTotal(0);
+    setSpeed(0);
+    setEta(0);
+    if (fileUrl) URL.revokeObjectURL(fileUrl);
+    setFileUrl("");
+    setFileName("");
+    setPhase("preparing");
+
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
+    const timeout = setTimeout(() => ctrl.abort(), 20 * 60_000);
+
+    try {
+      devLog("POST /download", { quality: choice.quality, type: choice.type });
+      const res = await fetch(apiUrl("/download"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          url: parsed.url,
+          quality: choice.quality,
+          format_id: choice.format_id ?? null,
+          type: choice.type,
+        }),
+        signal: ctrl.signal,
+      });
+      devLog("POST /download ->", res.status, res.headers.get("Content-Type"));
+
+      if (res.status === 404 || res.status === 405) {
+        setPhase("error");
+        setError(
+          "The download server is online but does not offer a download endpoint yet, so only video details can be loaded. The API needs to be redeployed with the full downloader (see backend/README.md).",
+        );
+        return;
+      }
+
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { code?: string; detail?: { code?: string } };
+        setPhase("error");
+        setError(friendlyError(data.code ?? data.detail?.code, res.status));
+        return;
+      }
+
+      const contentType = res.headers.get("Content-Type") ?? "";
+
+      // Async backends answer with a JSON job envelope instead of the file.
+      if (contentType.includes("application/json")) {
+        const job = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+        const jobId = String(job["job_id"] ?? job["id"] ?? job["task_id"] ?? "");
+        const directUrl = pickFileUrl(job);
+        if (directUrl) {
+          const fileRes = await fetch(absolute(directUrl), { signal: ctrl.signal });
+          if (!fileRes.ok) throw new Error("file_fetch_failed");
+          await saveResponse(fileRes, choice.type, info.title);
+          return;
+        }
+        if (!jobId) {
+          setPhase("error");
+          setError(friendlyError((job["code"] as string) ?? undefined, res.status));
+          return;
+        }
+        devLog("job", jobId);
+        setPhase("processing");
+        const finalUrl = await pollJob(jobId, ctrl.signal, (p) => {
+          if (typeof p === "number") {
+            setTotal(100);
+            setReceived(p);
+          }
+        });
+        if (!finalUrl) {
+          setPhase("error");
+          setError("The server could not finish preparing this file. Please try again or pick another quality.");
+          return;
+        }
+        const fileRes = await fetch(absolute(finalUrl), { signal: ctrl.signal });
+        if (!fileRes.ok) throw new Error("file_fetch_failed");
+        setReceived(0);
+        setTotal(0);
+        await saveResponse(fileRes, choice.type, info.title);
+        return;
+      }
+
+      await saveResponse(res, choice.type, info.title);
     } catch (e) {
       if ((e as Error).name === "AbortError") {
         setPhase("error");
