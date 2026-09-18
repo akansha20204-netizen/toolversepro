@@ -276,6 +276,9 @@ export function YouTubeVideoDownloader() {
     setTotal(0);
     setSpeed(0);
     setEta(0);
+    if (fileUrl) URL.revokeObjectURL(fileUrl);
+    setFileUrl("");
+    setFileName("");
   };
 
   const fetchInfo = useCallback(async () => {
@@ -579,7 +582,8 @@ export function YouTubeVideoDownloader() {
 
       {phase === "fetching" && (
         <ResultBox className="flex items-center gap-3 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" /> Fetching video details from YouTube…
+          <Loader2 className="h-4 w-4 animate-spin" />
+          {waking ? "Server is starting. Please wait…" : "Fetching video details from YouTube…"}
         </ResultBox>
       )}
 
