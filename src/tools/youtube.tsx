@@ -194,6 +194,60 @@ function buildChoices(info: ApiInfo): Choice[] {
   return out;
 }
 
+/** Turn a possibly relative API path into an absolute URL on the API host. */
+const absolute = (u: string) => (/^https?:\/\//i.test(u) ? u : apiUrl(u));
+
+/** Find a media URL in an arbitrary job/response object, whatever it's called. */
+function pickFileUrl(obj: Record<string, unknown>): string {
+  for (const key of ["url", "download_url", "file_url", "file", "path", "location", "result"]) {
+    const v = obj[key];
+    if (typeof v === "string" && v.length > 3 && !v.startsWith("{")) return v;
+    if (v && typeof v === "object") {
+      const nested = pickFileUrl(v as Record<string, unknown>);
+      if (nested) return nested;
+    }
+  }
+  return "";
+}
+
+/**
+ * Poll an async job until it completes or fails. Bounded: gives up after
+ * ~10 minutes so it can never loop forever.
+ */
+async function pollJob(
+  jobId: string,
+  signal: AbortSignal,
+  onProgress: (pct: number | null) => void,
+): Promise<string> {
+  const paths = [`/status/${jobId}`, `/jobs/${jobId}`, `/progress/${jobId}`, `/download/${jobId}`];
+  let statusPath = "";
+  const deadline = Date.now() + 10 * 60_000;
+
+  while (Date.now() < deadline) {
+    if (signal.aborted) return "";
+    const candidates = statusPath ? [statusPath] : paths;
+    for (const p of candidates) {
+      const res = await fetch(apiUrl(p), { signal, cache: "no-store" }).catch(() => null);
+      if (!res || res.status === 404) continue;
+      statusPath = p;
+      const ct = res.headers.get("Content-Type") ?? "";
+      if (!ct.includes("application/json")) return p; // the file itself
+      const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      const status = String(data["status"] ?? data["state"] ?? "").toLowerCase();
+      const progress = Number(data["progress"] ?? data["percent"] ?? NaN);
+      onProgress(Number.isFinite(progress) ? progress : null);
+      devLog("job status", status, Number.isFinite(progress) ? progress : "");
+      if (["failed", "error", "cancelled", "canceled"].includes(status)) return "";
+      if (["completed", "complete", "finished", "done", "success", "ready"].includes(status)) {
+        return pickFileUrl(data);
+      }
+      break;
+    }
+    await new Promise((r) => setTimeout(r, 2500));
+  }
+  return "";
+}
+
 export function YouTubeVideoDownloader() {
   const [url, setUrl] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
@@ -204,6 +258,9 @@ export function YouTubeVideoDownloader() {
   const [total, setTotal] = useState(0);
   const [speed, setSpeed] = useState(0);
   const [eta, setEta] = useState(0);
+  const [waking, setWaking] = useState(false);
+  const [fileUrl, setFileUrl] = useState("");
+  const [fileName, setFileName] = useState("");
   const abortRef = useRef<AbortController | null>(null);
 
   const choices = useMemo(() => (info ? buildChoices(info) : []), [info]);
