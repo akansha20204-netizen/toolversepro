@@ -671,11 +671,13 @@ export function YouTubeVideoDownloader() {
               </div>
               <div className="flex shrink-0 gap-2">
                 {fileUrl && (
-                  <TButton asChild>
-                    <a href={fileUrl} download={fileName || undefined}>
-                      <Download className="h-4 w-4" /> Download File
-                    </a>
-                  </TButton>
+                  <a
+                    href={fileUrl}
+                    download={fileName || undefined}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl gradient-primary px-4 py-2.5 text-sm font-medium text-white shadow-md transition-all hover:shadow-glow active:scale-[0.98]"
+                  >
+                    <Download className="h-4 w-4" /> Download File
+                  </a>
                 )}
                 <TButton variant="outline" onClick={reset}>
                   New video
